@@ -943,7 +943,7 @@ static int eta6937_get_input_current(struct charger_device *chg_dev, u32 *aicr)
 static int eta6937_set_input_current(struct charger_device *chg_dev, u32 current_value)
 {
 	u32 status = 0;
-	u32 set_chr_current;
+	u32 set_chr_current = 0;
 	u32 array_size;
 	u32 register_value;
 
