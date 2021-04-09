@@ -268,7 +268,7 @@ static unsigned int bmt_find_closest_level(const unsigned int *pList, unsigned i
   *   [Global Variable]
   *
   *********************************************************/
-unsigned char eta6937_reg[eta6937_REG_NUM] = { 0 };
+unsigned char eta6937_reg[eta6937_REG_NUM + 1] = { 0 };
 
 int g_eta6937_hw_exist;
 
