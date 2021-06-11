@@ -206,8 +206,8 @@ static unsigned int charging_value_to_parameter(const unsigned int *parameter, c
 	if (val < array_size)
 		return parameter[val];
 
-		printk("eta6937 Can't find the parameter\n");
-		return parameter[0];
+	printk("eta6937 Can't find the parameter\n");
+	return parameter[0];
 
 }
 

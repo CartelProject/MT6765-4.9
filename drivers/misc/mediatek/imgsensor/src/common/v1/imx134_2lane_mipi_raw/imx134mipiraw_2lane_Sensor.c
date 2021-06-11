@@ -1059,9 +1059,9 @@ static kal_uint32 open(void)
     }
     if (imgsensor_info.sensor_id != sensor_id)
         return ERROR_SENSOR_CONNECT_FAIL;
-	sensor_init();
-	imgsensor.gain = 0;
-	spin_lock(&imgsensor_drv_lock);
+    sensor_init();
+    imgsensor.gain = 0;
+    spin_lock(&imgsensor_drv_lock);
     imgsensor.autoflicker_en= KAL_FALSE;
     imgsensor.sensor_mode = IMGSENSOR_MODE_INIT;
     imgsensor.pclk = imgsensor_info.pre.pclk;

@@ -314,10 +314,10 @@ static ssize_t Charging_Current_show(struct device_driver *ddri, char *buf)
 	ssize_t res;
 	int ret_value = 0;
 	unsigned char exist = 0;
-    ret_value=pmic_get_charging_current();
+        ret_value=pmic_get_charging_current();
 	mtk_chr_is_charger_exist(&exist);
-    if(ret_value<0)
-        ret_value=0;
+        if(ret_value<0)
+	        ret_value=0;
 	if(exist==0)
 		ret_value=0;
 	res = sprintf(buf, "%d\n", ret_value);
