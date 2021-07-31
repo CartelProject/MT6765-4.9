@@ -47,7 +47,7 @@
 #endif
 #ifdef CONFIG_MTK_LEGACY
 #include <mach/mt_gpio.h>
-#include <cust_gpio_usage.h>
+//#include <cust_gpio_usage.h>
 #include <cust_i2c.h>
 #endif
 

@@ -16,6 +16,8 @@
 
 #include "lcm_drv.h"
 #include "lcm_common.h"
-
+#ifdef BUILD_LK //xen 20180205
+int PMU_REG_MASK (kal_uint8 addr, kal_uint8 val, kal_uint8 mask);
+#endif
 #endif
 

@@ -22,6 +22,8 @@ obj-$(CONFIG_MTK_LCM) += mt65xx_lcm_list.o        \
                          lcm_pmic.o               \
                          lcm_util.o
 
+obj-$(CONFIG_MTK_LCM_5V_IC) += lcm_ocp2131.o
+
 LCM_LISTS := $(subst ",,$(CONFIG_CUSTOM_KERNEL_LCM))
 obj-$(CONFIG_MTK_LCM) += $(foreach LCM,$(LCM_LISTS),$(LCM)/)
 
@@ -36,4 +38,6 @@ DEFINES += $(foreach LCM,$(LCM_DEFINES),$(LCM))
 DEFINES += MTK_LCM_PHYSICAL_ROTATION=\"$(MTK_LCM_PHYSICAL_ROTATION)\"
 ccflags-$(CONFIG_MTK_LCM) += $(addprefix -D, $(DEFINES))
 ccflags-$(CONFIG_MTK_LCM_DEVICE_TREE_SUPPORT) += -DMTK_LCM_DEVICE_TREE_SUPPORT
-
+EXTRA_DEFINES := $(addprefix -D, $(shell echo $(CONFIG_MTK_LCM_DEFINES) | tr a-z A-Z))
+ccflags-$(CONFIG_MTK_LCM) += $(EXTRA_DEFINES)
+subdir-ccflags-$(CONFIG_MTK_LCM) += $(EXTRA_DEFINES)

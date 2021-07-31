@@ -23,3 +23,13 @@ config MTK_LCM_DEVICE_TREE_SUPPORT
 	  Please also turn on MTK_LCM_DEVICE_TREE_SUPPORT in ProjectConfig.mk.
 	  If not define MTK_LCM_DEVICE_TREE_SUPPORT
 	  there will not connect between display driver and LCM devices.
+
+config MTK_LCM_5V_IC
+	bool "MediaTek 5V LCM"
+	help
+	  Decide whether chosen LCM has 5V IC
+
+config MTK_LCM_DEFINES
+	string "Defines for MTK LCM projects"
+	help
+	  Provide list of defines that must be used on your LCM projects

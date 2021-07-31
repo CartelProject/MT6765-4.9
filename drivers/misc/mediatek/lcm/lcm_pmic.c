@@ -11,6 +11,86 @@
  * GNU General Public License for more details.
  */
 
+#ifdef BUILD_LK
+#ifndef MACH_FPGA
+#include <lcm_pmic.h>
+
+#ifdef MTK_RT5081_PMU_CHARGER_SUPPORT
+#include <cust_i2c.h>
+	#define I2C_PMU_CHANNEL I2C_RT5081_PMU_CHANNEL
+	#define I2C_PMU_SLAVE_7_BIT_ADDR I2C_RT5081_PMU_SLAVE_7_BIT_ADDR
+#else
+#ifdef MTK_MT6370_PMU
+#include <platform/mt_pmu.h>
+	#define I2C_PMU_CHANNEL I2C_SUBPMIC_PMU_CHANNEL
+	#define I2C_PMU_SLAVE_7_BIT_ADDR I2C_SUBPMIC_PMU_SLAVE_7_BIT_ADDR
+#endif
+#endif
+
+#if  defined(MTK_RT5081_PMU_CHARGER_SUPPORT) || defined(MTK_MT6370_PMU)
+static int PMU_read_byte (kal_uint8 addr, kal_uint8 *dataBuffer)
+{
+	kal_uint32 ret = I2C_OK;
+	kal_uint16 len;
+	struct mt_i2c_t PMU_i2c;
+	*dataBuffer = addr;
+
+	PMU_i2c.id = I2C_PMU_CHANNEL;
+	PMU_i2c.addr = I2C_PMU_SLAVE_7_BIT_ADDR;
+	PMU_i2c.mode = ST_MODE;
+	PMU_i2c.speed = 100;
+	len = 1;
+
+	ret = i2c_write_read(&PMU_i2c, dataBuffer, len, len);
+	if (I2C_OK != ret)
+		dprintf(1, "[LK/LCM] %s: i2c_read  failed! ret: %d\n", __func__, ret);
+	return ret;
+}
+
+static int PMU_write_byte(kal_uint8 addr, kal_uint8 value)
+{
+	kal_uint32 ret_code = I2C_OK;
+	kal_uint8 write_data[2];
+	kal_uint16 len;
+	struct mt_i2c_t PMU_i2c;
+
+	write_data[0] = addr;
+	write_data[1] = value;
+
+	PMU_i2c.id = I2C_PMU_CHANNEL;
+	PMU_i2c.addr = I2C_PMU_SLAVE_7_BIT_ADDR;
+	PMU_i2c.mode = ST_MODE;
+	PMU_i2c.speed = 100;
+	len = 2;
+
+	ret_code = i2c_write(&PMU_i2c, write_data, len);
+
+	return ret_code;
+}
+
+int PMU_REG_MASK (kal_uint8 addr, kal_uint8 val, kal_uint8 mask)
+{
+	kal_uint8 PMU_reg = 0;
+	kal_uint32 ret = 0;
+
+	ret = PMU_read_byte(addr, &PMU_reg);
+
+	PMU_reg &= ~mask;
+	PMU_reg |= val;
+
+	ret = PMU_write_byte(addr, PMU_reg);
+
+	return ret;
+}
+#else
+int PMU_REG_MASK (kal_uint8 addr, kal_uint8 val, kal_uint8 mask)
+{
+	return 0;
+}
+
+#endif
+#endif
+#else //kernel part:
 #include <linux/regulator/consumer.h>
 #include <linux/string.h>
 #include <linux/kernel.h>
@@ -56,12 +136,14 @@ int display_bias_enable(void)
 	display_bias_regulator_init();
 
 	/* set voltage with min & max*/
-	ret = regulator_set_voltage(disp_bias_pos, 5400000, 5400000);
+	//ret = regulator_set_voltage(disp_bias_pos, 5400000, 5400000);
+	ret = regulator_set_voltage(disp_bias_pos, 5800000, 5800000);
 	if (ret < 0)
 		pr_info("set voltage disp_bias_pos fail, ret = %d\n", ret);
 	retval |= ret;
 
-	ret = regulator_set_voltage(disp_bias_neg, 5400000, 5400000);
+	//ret = regulator_set_voltage(disp_bias_neg, 5400000, 5400000);
+	ret = regulator_set_voltage(disp_bias_neg, 5800000, 5800000);
 	if (ret < 0)
 		pr_info("set voltage disp_bias_neg fail, ret = %d\n", ret);
 	retval |= ret;
@@ -137,4 +219,4 @@ int display_bias_disable(void)
 }
 EXPORT_SYMBOL(display_bias_disable);
 #endif
-
+#endif
