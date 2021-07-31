@@ -64,6 +64,28 @@
 #define CREATE_TRACE_POINTS
 #include "trace/lowmemorykiller.h"
 
+//add by wtwd begin
+#ifdef CONFIG_MTK_GMO_RAM_OPTIMIZE
+#define CUSTOM_LOWMEMROY_KILL
+
+static short CONVERT_ADJ(short oom_adj)
+{
+	if (oom_adj == OOM_ADJUST_MAX)
+		return OOM_SCORE_ADJ_MAX;
+	else
+		return (oom_adj * OOM_SCORE_ADJ_MAX) / -OOM_DISABLE;
+}
+
+static short REVERT_ADJ(short oom_adj)
+{
+	if (oom_adj == OOM_ADJUST_MAX)
+		return OOM_SCORE_ADJ_MAX;
+	else
+		return (oom_adj * (-OOM_DISABLE + 1) / OOM_SCORE_ADJ_MAX);
+}
+#endif
+//add by wtwd endif
+
 static DEFINE_SPINLOCK(lowmem_shrink_lock);
 static short lowmem_warn_adj, lowmem_no_warn_adj = 200;
 static u32 lowmem_debug_level = 1;
@@ -520,6 +542,12 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	int selected_tasksize = 0;
 	short selected_oom_score_adj;
 	int array_size = ARRAY_SIZE(lowmem_adj);
+	//add by wtwd begin
+	#ifdef CUSTOM_LOWMEMROY_KILL
+	int iscontact = 0;
+	#endif
+	//add by wtwd end
+	
 	int other_free = global_page_state(NR_FREE_PAGES) - totalreserve_pages;
 	int other_file = global_node_page_state(NR_FILE_PAGES) -
 				global_node_page_state(NR_SHMEM) -
@@ -599,11 +627,11 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 			spin_unlock(&lowmem_shrink_lock);
 			return 0;
 		} else if (task_lmk_waiting(tsk)) {
-#ifdef CONFIG_MTK_ENG_BUILD
+			#ifdef CONFIG_MTK_ENG_BUILD
 			lowmem_print(1,
 				     "%d (%s) is dying, find next candidate\n",
 				     tsk->pid, tsk->comm);
-#endif
+			#endif
 			if (tsk->state == TASK_RUNNING)
 				p_state_is_found |= LOWMEM_P_STATE_R;
 			else
@@ -637,19 +665,147 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 		task_unlock(p);
 		if (tasksize <= 0)
 			continue;
-		if (selected) {
-			if (oom_score_adj < selected_oom_score_adj)
+		//add by wtwd begin
+		#ifndef CUSTOM_LOWMEMROY_KILL
+			if (selected) {
+				if (oom_score_adj < selected_oom_score_adj)
+					continue;
+				if (oom_score_adj == selected_oom_score_adj && tasksize <= selected_tasksize)
+					continue;
+			}
+		#else
+			//char *comm = p->comm;
+			lowmem_print(1, "wtwd select p->comm[%s] to kill\n",
+			     p->comm);
+			iscontact=0;
+            //"nos.alicontacts"
+			if (!strcmp(p->comm, "nos.alicontacts"))
+			{
+				iscontact=1;
+				lowmem_print(1, "wtwd select nos.alicontacts[%d]  to kill\n", iscontact);
+			}
+			lowmem_print(1, "wtwd select min_score_adj[%d]\n",
+					     min_score_adj);
+			if((min_score_adj > CONVERT_ADJ(6)) && (iscontact==1))
+			{
+				lowmem_print(1, "wtwd select continue[%d]\n", iscontact);
 				continue;
-			if (oom_score_adj == selected_oom_score_adj &&
-			    tasksize <= selected_tasksize)
-				continue;
-		}
+			}
+			
+			if(min_score_adj < CONVERT_ADJ(7))
+			{
+				lowmem_print(1, "wtwd select min_score_adj<7[%d]\n", iscontact);
+				if (selected) {
+					if (oom_score_adj < selected_oom_score_adj)
+						continue;
+					if (oom_score_adj == selected_oom_score_adj &&
+					    tasksize <= selected_tasksize)
+						continue;
+				}
+			}
+		#endif
+		//add by wtwd end
 		selected = p;
 		selected_tasksize = tasksize;
 		selected_oom_score_adj = oom_score_adj;
 		lowmem_print(2, "select '%s' (%d), adj %hd, size %d, to kill\n",
 			     p->comm, p->pid, oom_score_adj, tasksize);
+				 
+		//add by wtwd begin
+		#ifdef CUSTOM_LOWMEMROY_KILL
+		if (min_score_adj >= CONVERT_ADJ(7)) {
+			lowmem_print(1, "Killing '%s' (%d), adj %d, score_adj %hd,\n" \
+				"   to free %ldkB on behalf of '%s' (%d) because\n" \
+				"   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n" \
+				"   Free memory is %ldkB above reserved\n",
+				selected->comm, selected->pid,
+				REVERT_ADJ(selected_oom_score_adj),
+				selected_oom_score_adj,
+				selected_tasksize * (long)(PAGE_SIZE / 1024),
+				current->comm, current->pid,
+				other_file * (long)(PAGE_SIZE / 1024),
+				minfree * (long)(PAGE_SIZE / 1024),
+				min_score_adj,
+				other_free * (long)(PAGE_SIZE / 1024));
+			//lowmem_deathpending = selected;
+			lowmem_deathpending_timeout = jiffies + HZ;
+			
+			//if (output_expect(enable_candidate_log)) {
+			lowmem_print(1, "low memory info:\n");
+			//show_free_areas_minimum();
+			#ifdef CONFIG_ION_MTK
+			/* Show ION status */
+			lowmem_print(1, "ion_mm_heap_total_memory[%ld]\n",(unsigned long)ion_mm_heap_total_memory());
+			ion_mm_heap_memory_detail();
+			#endif
+			//}
+			
+			/*
+			 * when kill adj=0 process trigger kernel warning, only in MTK internal eng load
+			 */
+			#if defined (CONFIG_MTK_AEE_FEATURE) && defined (CONFIG_MT_ENG_BUILD)
+			if ((selected_oom_score_adj <= lowmem_kernel_warn_adj) && // can set lowmem_kernel_warn_adj=16 for test
+					time_after_eq(jiffies, flm_warn_timeout)) {
+				if (pid_dump != pid_flm_warn) {
+					#define MSG_SIZE_TO_AEE 70
+					char msg_to_aee[MSG_SIZE_TO_AEE];
+					lowmem_print(1, "low memory trigger kernel warning\n");
+						
+					snprintf(msg_to_aee, MSG_SIZE_TO_AEE, "please contact AP/AF memory module owner[pid:%d]\n", pid_dump);
+					aee_kernel_warning_api("LMK", 0, DB_OPT_DEFAULT|DB_OPT_DUMPSYS_ACTIVITY|DB_OPT_LOW_MEMORY_KILLER
+						| DB_OPT_PID_MEMORY_INFO /*for smaps and hprof*/
+						| DB_OPT_PROCESS_COREDUMP
+						| DB_OPT_DUMPSYS_SURFACEFLINGER
+						| DB_OPT_DUMPSYS_GFXINFO
+						| DB_OPT_DUMPSYS_PROCSTATS,
+						"Framework low memory\nCRDISPATCH_KEY:FLM_APAF", msg_to_aee);
+							
+					if (pid_dump == selected->pid) {//select 1st time, filter it
+						//pid_dump = pid_sec_mem;
+						pid_flm_warn = pid_dump;
+						flm_warn_timeout = jiffies + 60*HZ;
+						//lowmem_deathpending = NULL;
+						lowmem_print(1, "'%s' (%d) max RSS, not kill\n",
+						selected->comm, selected->pid);
+						send_sig(SIGSTOP, selected, 0);
+						rcu_read_unlock();
+						spin_unlock(&lowmem_shrink_lock);
+							return rem;
+					}
+				} else {
+					lowmem_print(1, "pid_flm_warn:%d, select '%s' (%d)\n",
+						pid_flm_warn, selected->comm, selected->pid);
+					pid_flm_warn = -1; //reset
+				}
+			}
+			#endif
+			
+			/*
+			 * show an indication if low memory
+			 */
+			//#if defined (CONFIG_MTK_AEE_FEATURE) && defined (CONFIG_MT_ENG_BUILD)
+			//if (!in_lowmem && selected_oom_score_adj <= lowmem_debug_adj) {
+			//	in_lowmem = 1;
+			//	//DAL_LowMemoryOn();
+			//	lowmem_print(1, "LowMemoryOn\n");
+			//	//aee_kernel_warning(module_name, lowmem_warning);
+			//}
+			//#endif
+			
+			//#ifdef CONFIG_ZRAM
+			//mlog(1);
+			//#endif
+			
+			send_sig(SIGKILL, selected, 0);
+			set_tsk_thread_flag(selected, TIF_MEMDIE);
+			rem -= selected_tasksize;
+		}
+		#endif
+		//add by wtwd end
 	}
+	
+	//add by wtwd begin
+	#ifndef CUSTOM_LOWMEMROY_KILL
 	if (selected) {
 		long cache_size = other_file * (long)(PAGE_SIZE / 1024);
 		long cache_limit = minfree * (long)(PAGE_SIZE / 1024);
@@ -691,6 +847,102 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 				     "No selected (full of OTHER-state processes at %d)\n",
 				     (int)min_score_adj);
 	}
+	#else
+	if(min_score_adj < CONVERT_ADJ(7))
+	{
+		if (selected) {
+			lowmem_print(1, "Killing '%s' (%d), adj %d, score_adj %hd,\n" \
+						"   to free %ldkB on behalf of '%s' (%d) because\n" \
+						"   cache %ldkB is below limit %ldkB for oom_score_adj %hd\n" \
+						"   Free memory is %ldkB above reserved kai3\n",
+						selected->comm, selected->pid,
+                                REVERT_ADJ(selected_oom_score_adj),
+						selected_oom_score_adj,
+						selected_tasksize * (long)(PAGE_SIZE / 1024),
+						current->comm, current->pid,
+						other_file * (long)(PAGE_SIZE / 1024),
+						minfree * (long)(PAGE_SIZE / 1024),
+						min_score_adj,
+						other_free * (long)(PAGE_SIZE / 1024));
+			//lowmem_deathpending = selected;
+			lowmem_deathpending_timeout = jiffies + HZ;
+			lowmem_trigger_warning(selected, selected_oom_score_adj);
+			
+			//if (output_expect(enable_candidate_log)) {
+				//if (print_extra_info) {
+					lowmem_print(1, "low memory info:\n");
+					//show_free_areas_minimum();
+					#ifdef CONFIG_ION_MTK
+						/* Show ION status */
+						lowmem_print(1, "ion_mm_heap_total_memory[%ld]\n",(unsigned long)ion_mm_heap_total_memory());
+						ion_mm_heap_memory_detail();
+					#endif
+				//}
+			//}
+			
+			/*
+			* when kill adj=0 process trigger kernel warning, only in MTK internal eng load
+			*/
+			#if defined (CONFIG_MTK_AEE_FEATURE) && defined (CONFIG_MT_ENG_BUILD)
+			if ((selected_oom_score_adj <= lowmem_kernel_warn_adj) && // can set lowmem_kernel_warn_adj=16 for test
+					time_after_eq(jiffies, flm_warn_timeout)) {
+				if (pid_dump != pid_flm_warn) {
+					#define MSG_SIZE_TO_AEE 70
+					char msg_to_aee[MSG_SIZE_TO_AEE];
+					lowmem_print(1, "low memory trigger kernel warning\n");
+					
+					snprintf(msg_to_aee, MSG_SIZE_TO_AEE, "please contact AP/AF memory module owner[pid:%d]\n", pid_dump);
+					aee_kernel_warning_api("LMK", 0, DB_OPT_DEFAULT|DB_OPT_DUMPSYS_ACTIVITY|DB_OPT_LOW_MEMORY_KILLER
+						| DB_OPT_PID_MEMORY_INFO /*for smaps and hprof*/
+						| DB_OPT_PROCESS_COREDUMP
+						| DB_OPT_DUMPSYS_SURFACEFLINGER
+						| DB_OPT_DUMPSYS_GFXINFO
+						| DB_OPT_DUMPSYS_PROCSTATS,
+						"Framework low memory\nCRDISPATCH_KEY:FLM_APAF", msg_to_aee);
+						
+					if (pid_dump == selected->pid) {//select 1st time, filter it
+						//pid_dump = pid_sec_mem;
+						pid_flm_warn = pid_dump;
+						flm_warn_timeout = jiffies + 60*HZ;
+						//lowmem_deathpending = NULL;
+						lowmem_print(1, "'%s' (%d) max RSS, not kill\n",
+							selected->comm, selected->pid);
+						send_sig(SIGSTOP, selected, 0);
+						rcu_read_unlock();
+						spin_unlock(&lowmem_shrink_lock);
+						return rem;
+					}
+				} else {
+					lowmem_print(1, "pid_flm_warn:%d, select '%s' (%d)\n",
+						pid_flm_warn, selected->comm, selected->pid);
+						pid_flm_warn = -1; //reset
+				}
+			}
+			#endif
+			
+			/*
+			 * show an indication if low memory
+			 */
+			//#if defined (CONFIG_MTK_AEE_FEATURE) && defined (CONFIG_MT_ENG_BUILD)
+			//if (!in_lowmem && selected_oom_score_adj <= lowmem_debug_adj) {
+			//	in_lowmem = 1;
+			//	//DAL_LowMemoryOn();
+			//	lowmem_print(1, "LowMemoryOn\n");
+			//	//aee_kernel_warning(module_name, lowmem_warning);
+			//}
+			//#endif
+			
+			//#ifdef CONFIG_ZRAM
+			//mlog(1);
+			//#endif
+			
+			send_sig(SIGKILL, selected, 0);
+			set_tsk_thread_flag(selected, TIF_MEMDIE);
+			rem -= selected_tasksize;
+		}
+	}
+	#endif
+	//add by wtwd end
 
 	lowmem_print(4, "lowmem_scan %lu, %x, return %lu\n",
 		     sc->nr_to_scan, sc->gfp_mask, rem);
