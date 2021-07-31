@@ -1011,7 +1011,11 @@ static void dis_micbias_work_callback(struct work_struct *work)
 		pr_info("accdet %s more than 6s,MICBIAS:Disabled\n", __func__);
 	}
 }
-
+#if defined(CONFIG_TERACUBE_2E) 
+extern int cts_earphone_plugin2(void);
+extern int cts_earphone_plugout2(void);
+extern bool tp_probe_done;
+#endif
 static void eint_work_callback(struct work_struct *work)
 {
 #ifdef CONFIG_ACCDET_EINT_IRQ
@@ -1045,6 +1049,10 @@ static void eint_work_callback(struct work_struct *work)
 #else
 		enable_accdet(ACCDET_PWM_EN);
 #endif
+#if defined(CONFIG_TERACUBE_2E) 
+      if(tp_probe_done)
+	    cts_earphone_plugin2();
+#endif
 	} else {
 		pr_info("accdet cur:plug-out, cur_eint_state = %d\n",
 			cur_eint_state);
@@ -1058,6 +1066,10 @@ static void eint_work_callback(struct work_struct *work)
 			pmic_read(ACCDET_STATE_SWCTRL) & (~ACCDET_PWM_IDLE));
 		disable_accdet();
 		headset_plug_out();
+#if defined(CONFIG_TERACUBE_2E) 
+      if(tp_probe_done)
+	    cts_earphone_plugout2();
+#endif
 	}
 
 #ifdef CONFIG_ACCDET_EINT
