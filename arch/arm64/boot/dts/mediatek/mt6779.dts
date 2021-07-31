@@ -3176,8 +3176,7 @@ firmware_class.path=/vendor/firmware";
 	vdec_gcon: vdec_gcon@16000000 {
 		compatible = "mediatek,vdec_gcon", "syscon";
 		reg = <0 0x16000000 0 0x1000>,		/* VDEC_SYS */
-			 <0 0x16025000 0 0x1000>,		/* VDEC_MISC */
-			 <0 0x16020000 0 0x1000>;		/* VDEC_VLD */
+			 <0 0x16025000 0 0x1000>;		/* VDEC_MISC */
 		mediatek,larb = <&smi_larb1>;
 		interrupts = <GIC_SPI 324 IRQ_TYPE_LEVEL_LOW>;
 		mediatek,vcu = <&vcu>;
@@ -3831,12 +3830,10 @@ firmware_class.path=/vendor/firmware";
 
 		clocks = <&camsys CAMSYS_CCU_CGPDN>,
 			 <&mmsys_config MMSYS_GALS_CCU2MM>,
-			 <&topckgen TOP_MUX_CCU>,
-			 <&scpsys SCP_SYS_CAM>;
+			 <&topckgen TOP_MUX_CCU>;
 		clock-names = "CCU_CLK_CAM_CCU",
 			      "CCU_CLK_MMSYS_CCU",
-			      "CCU_CLK_TOP_MUX",
-			      "CAM_PWR";
+			      "CCU_CLK_TOP_MUX";
 	};
 
 	ipesys_config: ipesys_config@1b000000 {

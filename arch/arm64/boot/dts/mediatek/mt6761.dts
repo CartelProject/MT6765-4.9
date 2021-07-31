@@ -232,14 +232,6 @@ firmware_class.path=/vendor/firmware";
 			alloc-ranges = <0 0x40000000 0 0x80000000>;
 		};
 
-		gpu-reserve-memory {
-			compatible = "mediatek,gpu-fw-reserve-memory";
-			no-map;
-			size = <0 0x3000>;
-			alignment = <0 0x1000>;
-			alloc-ranges = <0 0x5fc00000 0 0x3000>;
-		};
-
 #ifdef CONFIG_MICROTRUST_TEE_SUPPORT
 		soter-shared-mem {
 			compatible = "microtrust,shared_mem";
@@ -639,11 +631,30 @@ firmware_class.path=/vendor/firmware";
 	accdet: accdet {
 		compatible = "mediatek,pmic-accdet";
 	};
-
+/*type-c device begin by xen 20161109*/
+	type_c: type_c@0{
+		compatible = "mediatek,type_c";
+	};
+/*type-c device end by xen 20161109*/
 	goodix_fp: fingerprint {
 		compatible = "mediatek,goodix-fp";
 	};
-
+	/*sw331b*/
+    sunwave_fp: sunwave_fp {
+		compatible = "sunwave,sunwave_fp";
+	};
+	/*CS fingerprint*/
+	cs_finger: cs_finger@0{
+		compatible = "mediatek,cs_finger";			
+	};
+	/*add for cdfiger start*/
+	cdfinger:cdfinger {
+		compatible = "mediatek,fps1098";
+	};
+/*add for cdfiger end*/
+	microarray_finger: microarray_finger {
+		compatible = "mediatek,microarray_finger";
+	};
 	mt6357_gauge {
 		compatible = "mediatek,mt6357_gauge";
 		gauge_name = "gauge";
@@ -2359,6 +2370,16 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 		interrupts = <GIC_SPI 220 IRQ_TYPE_LEVEL_LOW>;
 	};
 
+/*added by xjl for flashlight constant 20181030*/
+	flashlights_constant_gpio: flashlights_constant_gpio {
+		compatible = "mediatek,flashlights_constant_gpio";
+	};
+
+/*added by xen for LCD_ID of LCD driver 20171106*/
+	lcd_id_node: lcd_id {
+		compatible = "mediatek,lcd_id_gpio";
+	};
+
 	mtkfb: mtkfb@0 {
 		compatible = "mediatek,mtkfb";
 	};
@@ -2601,17 +2622,48 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 
 	flashlights_mt6370: flashlights_mt6370 {
 		compatible = "mediatek,flashlights_mt6370";
-		decouple = <0>;
+		decouple = <1>;/*mian led use ledcs1,sub led use ledcs2 cjc20180717*/
 		channel@1 {
 			type = <0>;
 			ct = <0>;
 			part = <0>;
 		};
 		channel@2 {
-			type = <0>;
-			ct = <1>;
+			type = <1>;
+			ct = <0>;
 			part = <0>;
 		};
+	};
+/*added by xen for BPIBUS control by MMI 20171014*/
+	bpibus_ctrl: bpibus_ctrl {
+		compatible = "mediatek,bpibus_ctrl";
+	};
+	gps {
+		compatible = "mediatek,gps";
+	};
+
+	gse_1: gse_1 {
+		compatible = "mediatek,gsensor";
+	};
+ /*mhall eint,added by xen 20170918*/
+	mhall: mhall {
+		compatible = "mediatek, mhall-eint";
+	};
+ /*mhall eint,added by xen 20170918*/	
+	als: als_ps@0 {
+		compatible = "mediatek,als_ps";
+	};
+	
+	mse: mse {
+		compatible = "mediatek,msensor";
+	};	
+		
+	gyro: gyro {
+		compatible = "mediatek,gyroscope";
+	};
+
+	baro: baro {
+		compatible = "mediatek,barometer";
 	};
 
 	venc_gcon: venc_gcon@17000000 {
@@ -2855,8 +2907,8 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 		usb_charger_current = <500000>;
 		ac_charger_current = <2050000>;
 		ac_charger_input_current = <3200000>;
-		non_std_ac_charger_current = <500000>;
-		charging_host_charger_current = <1500000>;
+		non_std_ac_charger_current = <1000000>;
+		charging_host_charger_current = <500000>;
 		ta_ac_charger_current = <3000000>;
 		pd_charger_current = <500000>;
 
@@ -2882,7 +2934,7 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 		/* common */
 		battery_cv = <4350000>;
 		max_charger_voltage = <6500000>;
-		min_charger_voltage = <4600000>;
+		min_charger_voltage = <4450000>;
 
 		/* dynamic mivr */
 		min_charger_voltage_1 = <4400000>;
@@ -2896,8 +2948,8 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 		usb_charger_current = <500000>;
 		ac_charger_current = <2050000>;
 		ac_charger_input_current = <3200000>;
-		non_std_ac_charger_current = <500000>;
-		charging_host_charger_current = <1500000>;
+		non_std_ac_charger_current = <1000000>;
+		charging_host_charger_current = <500000>;
 		apple_1_0a_charger_current = <650000>;
 		apple_2_1a_charger_current = <800000>;
 		ta_ac_charger_current = <3000000>;
@@ -3056,5 +3108,5 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 #include "mt6357.dtsi"
 #include "mt6370.dtsi"
 #include "mt6370_pd.dtsi"
-#include "cust_mt6761_camera.dtsi"
+//#include "cust_mt6761_camera.dtsi"
 
