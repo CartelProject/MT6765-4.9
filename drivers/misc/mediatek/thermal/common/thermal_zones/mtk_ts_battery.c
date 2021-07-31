@@ -466,7 +466,10 @@ struct thermal_cooling_device *cdev, unsigned long state)
 		/* To trigger data abort to reset the system
 		 * for thermal protection.
 		 */
+		 #if !defined(HX_HIGH_TEMPERATURE_TEST)
+		 pr_debug("undef HX_HIGH_TEMPERATURE_TEST");
 		BUG();
+		#endif
 	}
 	return 0;
 }

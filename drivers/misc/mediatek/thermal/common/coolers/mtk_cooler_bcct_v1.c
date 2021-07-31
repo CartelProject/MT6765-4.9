@@ -448,8 +448,8 @@ int pep30_input_curr_limit)
 		chrlmt_bat_chr_curr_limit = min_bat_char_curr_limit;
 		chrlmt_pep30_input_curr_limit = min_pep30_input_curr_limit;
 
-		if (bcct_chrlmt_queue)
-			queue_work(bcct_chrlmt_queue, &bcct_chrlmt_work);
+		//if (bcct_chrlmt_queue) //modified by xjl 20190225
+		//	queue_work(bcct_chrlmt_queue, &bcct_chrlmt_work);
 
 		mtk_cooler_bcct_dprintk_always("%s %p %d %d %d\n", __func__
 					, handle, chrlmt_chr_input_curr_limit
