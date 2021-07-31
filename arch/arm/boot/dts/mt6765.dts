@@ -244,13 +244,6 @@
 		#size-cells = <2>;
 		ranges;
 
-		zmc-default {
-			compatible = "mediatek,zone_movable_cma";
-			size = <0 0x10000000>;
-			alignment = <0 0x1000000>;
-			alloc-ranges = <0 0x0 1 0x00000000>;
-		};
-
 		reserve-memory-sspm_share {
 			compatible = "mediatek,reserve-memory-sspm_share";
 			no-map;
@@ -660,11 +653,19 @@
 	accdet: accdet {
 		compatible = "mediatek,pmic-accdet";
 	};
-
+	/*ICN fingerprint*/
+	icnfpsensor:icnfpsensor@0 {
+		compatible = "mediatek,icnfpsensor";
+	};
 	goodix_fp: fingerprint {
 		compatible = "mediatek,goodix-fp";
 	};
-
+	
+	/*sw331b*/
+        sunwave_fp: sunwave_fp {
+		compatible = "sunwave,sunwave_fp";
+	};
+	
 	mt6357_gauge {
 		compatible = "mediatek,mt6357_gauge";
 		gauge_name = "gauge";
@@ -1712,7 +1713,7 @@
 
 	spi0: spi@1100a000 {
 		compatible = "mediatek,mt6765-spi";
-		mediatek,pad-select = <0>;
+		mediatek,pad-select = <0>,<0>; /*modified:multi spi device by xen 20171025*/
 		reg = <0 0x1100a000 0 0x1000>;
 		interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_LOW>;
 		clocks = <&topckgen CLK_TOP_SYSPLL3_D2>,
@@ -2333,6 +2334,14 @@
 		reg = <0 0x14015000 0 0x1000>;
 		interrupts = <GIC_SPI 276 IRQ_TYPE_LEVEL_LOW>;
 	};
+/*added by xjl for flashlight constant 20181030*/
+	flashlights_constant_gpio: flashlights_constant_gpio {
+		compatible = "mediatek,flashlights_constant_gpio";
+	};
+/*added by xen for LCD_ID of LCD driver 20171106*/
+	lcd_id_node: lcd_id {
+		compatible = "mediatek,lcd_id_gpio";
+	};
 
 	mtkfb: mtkfb@0 {
 		compatible = "mediatek,mtkfb";
@@ -2665,21 +2674,49 @@
 
 	flashlights_mt6370: flashlights_mt6370 {
 		compatible = "mediatek,flashlights_mt6370";
-		decouple = <0>;
+		decouple = <1>;/*mian led use ledcs1,sub led use ledcs2 cjc20180717*/
 		channel@1 {
 			type = <0>;
 			ct = <0>;
 			part = <0>;
 		};
+		/** fzj remove for CTS CameraTest with no sub flashlight
 		channel@2 {
-			type = <0>;
-			ct = <1>;
+			type = <1>; xjl 20181220 modify
+			ct = <0>;
 			part = <0>;
-		};
+		};*/
 	};
-
+/*added by xen for BPIBUS control by MMI 20171014*/
+	bpibus_ctrl: bpibus_ctrl {
+		compatible = "mediatek,bpibus_ctrl";
+	};
 	gps {
 		compatible = "mediatek,gps";
+	};
+
+	gse_1: gse_1 {
+		compatible = "mediatek,gsensor";
+	};
+ /*mhall eint,added by xen 20170918*/
+	mhall: mhall {
+		compatible = "mediatek, mhall-eint";
+	};
+ /*mhall eint,added by xen 20170918*/	
+	als: als_ps@0 {
+		compatible = "mediatek,als_ps";
+	};
+	
+	mse: mse {
+		compatible = "mediatek,msensor";
+	};	
+		
+	gyro: gyro {
+		compatible = "mediatek,gyroscope";
+	};
+
+	baro: baro {
+		compatible = "mediatek,barometer";
 	};
 
 	ccu@1a0b1000 {
@@ -2734,7 +2771,7 @@
 		/* common */
 		battery_cv = <4350000>;
 		max_charger_voltage = <6500000>;
-		min_charger_voltage = <4600000>;
+		min_charger_voltage = <4450000>; /*xjl 20181220 modify*/
 
 		/* dynamic mivr */
 		min_charger_voltage_1 = <4400000>;
@@ -2868,16 +2905,6 @@
 	odm: odm{
 		compatible = "simple-bus";
 		/* reserved for overlay by odm */
-	};
-
-	memory_ssmr_features: memory-ssmr-features {
-		compatible = "mediatek,memory-ssmr-features";
-		svp-size = <0 0x10000000>;
-		iris-recognition-size = <0 0>;
-		2d_fr-size = <0 0>;
-		tui-size = <0 0>;
-		wfd-size = <0 0>;
-		prot-sharedmem-size = <0 0>;
 	};
 
 	radio_md_cfg: radio_md_cfg {
@@ -3053,6 +3080,7 @@
 };
 
 #include "cust_mt6765_msdc.dtsi"
+#include "trusty.dtsi"
 #include "mt6357.dtsi"
 #include "mt6370.dtsi"
 #include "mt6370_pd.dtsi"

@@ -65,9 +65,10 @@
 	register_setting = <&msdc1_register_setting_default>;
 
 	host_function = /bits/ 8 <MSDC_SD>;
-
+	non-removable;
+	cd_level_high = /bits/ 8 <MSDC_CD_HIGH>;
 	cd_level = /bits/ 8 <MSDC_CD_LOW>;
-	cd-gpios = <&pio 1 0>;
+	cd-gpios = <&pio 56 0>;
 
 	status = "okay";
 

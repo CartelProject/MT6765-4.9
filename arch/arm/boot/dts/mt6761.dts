@@ -225,14 +225,6 @@
 			alloc-ranges = <0 0x40000000 0 0x80000000>;
 		};
 
-		gpu-reserve-memory {
-			compatible = "mediatek,gpu-fw-reserve-memory";
-			no-map;
-			size = <0 0x3000>;
-			alignment = <0 0x1000>;
-			alloc-ranges = <0 0x5fc00000 0 0x3000>;
-		};
-
 #ifdef CONFIG_MICROTRUST_TEE_SUPPORT
 		soter-shared-mem {
 			compatible = "microtrust,shared_mem";
@@ -632,7 +624,15 @@
 	accdet: accdet {
 		compatible = "mediatek,pmic-accdet";
 	};
-
+	/*sw331b*/
+        sunwave_fp: sunwave_fp {
+		compatible = "sunwave,sunwave_fp";
+	};
+	/*add for cdfiger start*/
+	cdfinger:cdfinger {
+		compatible = "mediatek,fps1098";
+	};
+/*add for cdfiger end*/
 	mt6357_gauge {
 		compatible = "mediatek,mt6357_gauge";
 		gauge_name = "gauge";
@@ -1700,7 +1700,7 @@
 
 	spi0: spi0@1100a000 {
 		compatible = "mediatek,mt6765-spi";
-		mediatek,pad-select = <0>;
+		mediatek,pad-select = <0>,<0>; /*modified:multi spi device by xen 20171025*/
 		reg = <0 0x1100a000 0 0x1000>;
 		interrupts = <GIC_SPI 62 IRQ_TYPE_LEVEL_LOW>;
 		clocks = <&topckgen CLK_TOP_SYSPLL3_D2>,
@@ -2281,6 +2281,16 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 		interrupts = <GIC_SPI 220 IRQ_TYPE_LEVEL_LOW>;
 	};
 
+/*added by xjl for flashlight constant 20181030*/
+	flashlights_constant_gpio: flashlights_constant_gpio {
+		compatible = "mediatek,flashlights_constant_gpio";
+	};
+
+/*added by xen for LCD_ID of LCD driver 20171106*/
+	lcd_id_node: lcd_id {
+		compatible = "mediatek,lcd_id_gpio";
+	};
+
 	mtkfb: mtkfb@0 {
 		compatible = "mediatek,mtkfb";
 	};
@@ -2523,21 +2533,46 @@ mipi_rx_ana_csi0b: mipi_rx_ana_csi0b@11c11000 {
 
 	flashlights_mt6370: flashlights_mt6370 {
 		compatible = "mediatek,flashlights_mt6370";
-		decouple = <0>;
+		decouple = <1>;/*mian led use ledcs1,sub led use ledcs2 cjc20180717*/
 		channel@1 {
 			type = <0>;
 			ct = <0>;
 			part = <0>;
 		};
 		channel@2 {
-			type = <0>;
-			ct = <1>;
+			type = <1>;
+			ct = <0>;
 			part = <0>;
 		};
 	};
 	flashlights_aw3644: flashlights_aw3644 {
 		compatible = "mediatek,flashlights_aw3644";
 	};
+
+	gse_1: gse_1 {
+		compatible = "mediatek,gsensor";
+	};
+ /*mhall eint,added by xen 20170918*/
+	mhall: mhall {
+		compatible = "mediatek, mhall-eint";
+	};
+ /*mhall eint,added by xen 20170918*/	
+	als: als_ps@0 {
+		compatible = "mediatek,als_ps";
+	};
+	
+	mse: mse {
+		compatible = "mediatek,msensor";
+	};	
+		
+	gyro: gyro {
+		compatible = "mediatek,gyroscope";
+	};
+
+	baro: baro {
+		compatible = "mediatek,barometer";
+	};
+
 	venc_gcon: venc_gcon@17000000 {
 		compatible = "mediatek,venc_gcon", "syscon";
 		reg = <0 0x17000000 0 0x10000>;
