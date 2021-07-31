@@ -1,0 +1,36 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+SOTER_SHM_NUM_PRIV_PAGES	teei_shm_core.c	30;"	d	file:
+kern_shm_pool	teei_shm_core.c	/^struct teei_shm_pool *kern_shm_pool;$/;"	v	typeref:struct:teei_shm_pool
+pool_op_gen_alloc	teei_shm_pool.c	/^static int pool_op_gen_alloc(struct teei_shm_pool_mgr *poolm,$/;"	f	file:
+pool_op_gen_free	teei_shm_pool.c	/^static void pool_op_gen_free(struct teei_shm_pool_mgr *poolm,$/;"	f	file:
+pool_ops_generic	teei_shm_pool.c	/^static const struct teei_shm_pool_mgr_ops pool_ops_generic = {$/;"	v	typeref:struct:teei_shm_pool_mgr_ops	file:
+pool_res_mem_destroy	teei_shm_pool.c	/^static void pool_res_mem_destroy(struct teei_shm_pool *pool)$/;"	f	file:
+pool_res_mem_mgr_init	teei_shm_pool.c	/^static int pool_res_mem_mgr_init(struct teei_shm_pool_mgr *mgr,$/;"	f	file:
+reserved_mem	teei_shm_core.c	/^static struct reserved_mem *reserved_mem;$/;"	v	typeref:struct:reserved_mem	file:
+shared_mem_pool_setup	teei_shm_core.c	/^static int __init shared_mem_pool_setup(struct reserved_mem *rmem)$/;"	f	file:
+tee_shm_get_pa	teei_shm.c	/^EXPORT_SYMBOL_GPL(tee_shm_get_pa);$/;"	v
+teei_config_shm_memremap	teei_shm_core.c	/^static struct teei_shm_pool *teei_config_shm_memremap(void **memremaped_shm)$/;"	f	file:
+teei_shm_exit	teei_shm_core.c	/^module_exit(teei_shm_exit);$/;"	v
+teei_shm_exit	teei_shm_core.c	/^static void __exit teei_shm_exit(void)$/;"	f	file:
+teei_shm_get_pa	teei_shm.c	/^int teei_shm_get_pa(struct teei_shm *shm, size_t offs, phys_addr_t *pa)$/;"	f
+teei_shm_get_va	teei_shm.c	/^EXPORT_SYMBOL_GPL(teei_shm_get_va);$/;"	v
+teei_shm_get_va	teei_shm.c	/^void *teei_shm_get_va(struct teei_shm *shm, size_t offs)$/;"	f
+teei_shm_init	teei_shm_core.c	/^module_init(teei_shm_init);$/;"	v
+teei_shm_init	teei_shm_core.c	/^static int __init teei_shm_init(void)$/;"	f	file:
+teei_shm_kfree	teei_shm.c	/^EXPORT_SYMBOL_GPL(teei_shm_kfree);$/;"	v
+teei_shm_kfree	teei_shm.c	/^void teei_shm_kfree(struct teei_shm *shm)$/;"	f
+teei_shm_kmalloc	teei_shm.c	/^EXPORT_SYMBOL_GPL(teei_shm_kmalloc);$/;"	v
+teei_shm_kmalloc	teei_shm.c	/^struct teei_shm *teei_shm_kmalloc(size_t size, u32 flags)$/;"	f
+teei_shm_pa2va	teei_shm.c	/^EXPORT_SYMBOL_GPL(teei_shm_pa2va);$/;"	v
+teei_shm_pa2va	teei_shm.c	/^int teei_shm_pa2va(struct teei_shm *shm, phys_addr_t pa, void **va)$/;"	f
+teei_shm_pool_alloc_res_mem	teei_shm_pool.c	/^EXPORT_SYMBOL_GPL(teei_shm_pool_alloc_res_mem);$/;"	v
+teei_shm_pool_alloc_res_mem	teei_shm_pool.c	/^teei_shm_pool_alloc_res_mem(struct teei_shm_pool_mem_info *buff_info)$/;"	f
+teei_shm_pool_free	teei_shm_pool.c	/^EXPORT_SYMBOL_GPL(teei_shm_pool_free);$/;"	v
+teei_shm_pool_free	teei_shm_pool.c	/^void teei_shm_pool_free(struct teei_shm_pool *pool)$/;"	f
+teei_shm_va2pa	teei_shm.c	/^EXPORT_SYMBOL_GPL(teei_shm_va2pa);$/;"	v
+teei_shm_va2pa	teei_shm.c	/^int teei_shm_va2pa(struct teei_shm *shm, void *va, phys_addr_t *pa)$/;"	f

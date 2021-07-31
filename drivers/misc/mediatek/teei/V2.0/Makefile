@@ -10,7 +10,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 
-ifeq ($(CONFIG_MICROTRUST_TEE_SUPPORT), y)
-obj-y += V2.0/
-endif
+subdir-ccflags-y  += -I$(src)/common/include
 
+#obj-y += tee/
+obj-y += tz_driver/
+obj-y += teei_fp/
+obj-y += shm_pool/
