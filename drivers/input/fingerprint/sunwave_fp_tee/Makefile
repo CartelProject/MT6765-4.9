@@ -12,6 +12,7 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/teei/V1.0/tz_vfs
 
 # TEE support
 subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/tkcore/core
+subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/tkcore/include/
 
 # sunwave driver file
 obj-y          := sf_ctl.o sf_hw.o

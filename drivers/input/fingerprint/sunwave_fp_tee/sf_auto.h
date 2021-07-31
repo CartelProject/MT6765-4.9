@@ -87,10 +87,8 @@
 #define SF_BEANPOD_COMPATIBLE_V2_7  0
 #endif
 
-#if SF_BEANPOD_COMPATIBLE_V2_7
 #ifdef CONFIG_ARCH_MT6580
 #define MT_CG_PERI_SPI0 MT_CG_SPI_SW_CG
-#endif
 #endif
 
 /* rongcard compatible or not */
@@ -108,11 +106,6 @@
 #if (SF_PLATFORM_SEL == SF_REE_SPREAD) || (SF_PLATFORM_SEL == SF_TEE_TRUSTY)
 #undef  SF_INT_TRIG_HIGH
 #define SF_INT_TRIG_HIGH            1
-#endif
-
-#if (SF_PLATFORM_SEL == SF_REE_HIKEY9600)
-#undef  ANDROID_WAKELOCK
-#define ANDROID_WAKELOCK            0
 #endif
 
 /* check log debug */
@@ -134,6 +127,13 @@
 #define SF_SPI_TRANSFER             1
 #else
 #define SF_SPI_TRANSFER             0
+#endif
+
+/* beanpod and trustkernel compatible in CONFIG_SPI_MT65XX */
+#if (defined(CONFIG_SPI_MT65XX) && (SF_COMPATIBLE_SEL == SF_COMPATIBLE_TRUSTKERNEL))
+#define SF_TRUSTKERNEL_COMPAT_SPI_MT65XX         1
+#else
+#define SF_TRUSTKERNEL_COMPAT_SPI_MT65XX         0
 #endif
 
 #endif //__SF_AUTO_H__

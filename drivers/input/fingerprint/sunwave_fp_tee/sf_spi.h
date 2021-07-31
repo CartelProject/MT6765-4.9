@@ -3,6 +3,13 @@
 #ifndef __SF_SPI_H__
 #define __SF_SPI_H__
 
+#include "sf_user.h"
+
+#if (SF_MTK_CPU && defined(CONFIG_SPI_MT65XX))
+
+#include <linux/spi/spi.h>
+
+#if SF_TRUSTKERNEL_COMPAT_SPI_MT65XX
 
 #include <linux/types.h>
 #include <linux/io.h>
@@ -94,4 +101,11 @@ struct mt_chip_conf {
     enum spi_tckdly tckdly;
 };
 
-#endif
+#endif // end of #if SF_TRUSTKERNEL_COMPAT_SPI_MT65XX
+
+extern void mt_spi_enable_master_clk(struct spi_device *ms);
+extern void mt_spi_disable_master_clk(struct spi_device *ms);
+
+#endif // end of #if (SF_MTK_CPU && defined(CONFIG_SPI_MT65XX))
+
+#endif // end of #ifndef __SF_SPI_H__

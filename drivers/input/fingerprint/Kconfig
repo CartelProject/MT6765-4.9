@@ -19,10 +19,18 @@ config MTK_FINGERPRINT_SUPPORT
 	  fingerprint driver will support fingerprint function
 
 if MTK_FINGERPRINT_SUPPORT
+
+config MICROARRAY_FINGERPRINT
+	bool "Microarray Fingerprint"
+	default y
+	---help---
+	Microarray fingerprint Microarray's 121/112/88/64/48 device.
+
+if MICROARRAY_FINGERPRINT = ""
 config MTK_FINGERPRINT_SELECT
 	string "sensor type"
 	default "GF318M"
-
+endif
 
 if MTK_FINGERPRINT_SELECT = "FPC1145"
 config FPC_FINGERPRINT
@@ -47,5 +55,12 @@ config GOODIX_SENSOR_TYPE
 	  Must input sensor type, or default is GF316M GF318M GF3118M GF518M GF5118M GF516M GF816M
 	  GF3208 GF3206 GF3266 GF3288 GF5206 GF5216 GF5208
 endif
+
+config FPSENSOR_TEE
+	bool "FPSensor TEE Fingerprint"
+	default n
+	help
+	  FPSensor TEE fingerprint support
+
 endif
 endmenu

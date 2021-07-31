@@ -20,18 +20,27 @@
 #define __SF_CTRL_API_H__
 
 #include "sf_user.h"
+#include "sf_spi.h"
 #include "linux/version.h"
 
-#if ANDROID_WAKELOCK
+#ifdef CONFIG_PM_WAKELOCKS
+#include <linux/pm_wakeup.h>
+#else
 #include <linux/wakelock.h>
 #endif
 
 #include <linux/miscdevice.h>
+#include <linux/fb.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
+#elif defined(CONFIG_ADF_SPRD)
+//#include <mach/gpio.h>
+//#include <soc/sprd/sci_glb_regs.h>
+//#include <soc/sprd/adi.h>
+//#include <soc/sprd/adc.h>
+#include <video/adf_notifier.h>
 #else
-#include <linux/fb.h>
 #include <linux/notifier.h>
 #endif
 
@@ -40,7 +49,8 @@
 #endif
 
 #if SF_TRUSTKERNEL_COMPATIBLE
-#include <tee_fp.h>
+//#include <tee_fp.h>
+#include <linux/tee_fp.h>
 #endif
 
 #if SF_BEANPOD_COMPATIBLE_V2
@@ -73,21 +83,11 @@ extern struct TEEC_UUID uuid_fp;
 #include <cust_eint.h>
 #endif
 
-#if MTK_6739_SPEED_MODE
-#include "sf_spi.h"
-#endif
-
 #if SF_SPI_RW_EN
-#if (SF_MTK_CPU && !REE_MTK_ANDROID_L)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 0, 0)
+#if (!REE_MTK_ANDROID_L && defined(CONFIG_MTK_SPI))
 #include "mt_spi.h"
 #include "mt_spi_hal.h"
-#elif !MTK_6739_SPEED_MODE
-//kernel 4.4 maybe mark
-#include "mtk_spi.h"
-#include "mtk_spi_hal.h"
-#endif
-#endif
+#endif // end of #if (!REE_MTK_ANDROID_L && defined(CONFIG_MTK_SPI))
 typedef struct spi_device sf_device_t;
 typedef struct spi_driver sf_driver_t;
 #define SW_BUS_NAME "spi bus"
@@ -96,7 +96,7 @@ typedef struct spi_driver sf_driver_t;
 typedef struct platform_device sf_device_t;
 typedef struct platform_driver sf_driver_t;
 #define SW_BUS_NAME "platform bus"
-#endif
+#endif // end of #if SF_SPI_RW_EN
 
 struct sf_ctl_device {
     struct miscdevice miscdev;
@@ -112,17 +112,24 @@ struct sf_ctl_device {
     int  (*power_on)  (bool on);
     int  (*spi_clk_on)(bool on);
     int  (*reset)     (void);
-#if ANDROID_WAKELOCK
+#ifdef CONFIG_PM_WAKELOCKS
+    struct wakeup_source wakelock;
+#else
     struct wake_lock wakelock;
 #endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
     struct early_suspend early_suspend;
+#elif defined(CONFIG_ADF_SPRD)
+    struct notifier_block adf_event_block;
 #else
     struct notifier_block notifier;
 #endif
     char *spi_buffer;
     int attribute;
     sf_device_t *pdev;
+#if (defined(CONFIG_MTK_SPI) || SF_TRUSTKERNEL_COMPAT_SPI_MT65XX)
+    struct mt_chip_conf mt_conf;
+#endif
 };
 
 /* int event. */
@@ -157,14 +164,14 @@ typedef struct {
 
 typedef struct {
     char tee_solution[SF_MAX_VER_INFO_LEN];
-    char ca_version[SF_MAX_VER_INFO_LEN * 2];
-    char ta_version[SF_MAX_VER_INFO_LEN * 2];
-    char algorithm[SF_MAX_VER_INFO_LEN];
-    char algo_nav[SF_MAX_VER_INFO_LEN];
-    char driver[SF_MAX_VER_INFO_LEN];
-    char firmware[SF_MAX_VER_INFO_LEN];
-    char sunwave_id[SF_MAX_VER_INFO_LEN];
-    char vendor_id[SF_MAX_VER_INFO_LEN];
+    char ca_version  [SF_MAX_VER_INFO_LEN * 2];
+    char ta_version  [SF_MAX_VER_INFO_LEN * 2];
+    char algorithm   [SF_MAX_VER_INFO_LEN];
+    char algo_nav    [SF_MAX_VER_INFO_LEN];
+    char driver      [SF_MAX_VER_INFO_LEN];
+    char firmware    [SF_MAX_VER_INFO_LEN];
+    char sunwave_id  [SF_MAX_VER_INFO_LEN];
+    char vendor_id   [SF_MAX_VER_INFO_LEN];
 } __attribute__((__packed__)) sf_version_info_t;
 
 /* Magic code for IOCTL-subsystem, 's'(0x73) means 'Sunwave'. */
@@ -216,19 +223,4 @@ typedef struct {
 #define SPI_IOC_WR_MAX_SPEED_HZ     _IOW(SPI_IOC_MAGIC, 4, __u32)
 #define SPI_IOC_RST                 _IO(SPI_IOC_MAGIC, 5)
 #define SUNWAVE_IOC_ATTRIBUTE       _IOW(SPI_IOC_MAGIC, 17, __u32)
-
-extern int sf_platform_init(struct sf_ctl_device *ctl_dev);
-extern void sf_platform_exit(struct sf_ctl_device *ctl_dev);
-
-#ifdef CONFIG_TRAN_SYSTEM_DEVINFO
-extern void app_get_fingerprint_name(char *name);
-#endif
-
-extern void mt_spi_enable_master_clk(struct spi_device *ms);
-extern void mt_spi_disable_master_clk(struct spi_device *ms);
-
-#ifdef CONFIG_RSEE
-extern int rsee_client_get_fpid(int *vendor_id);
-#endif
-
 #endif /* __SF_CTRL_API_H__ */

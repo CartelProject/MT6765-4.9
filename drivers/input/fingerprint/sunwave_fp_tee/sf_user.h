@@ -19,9 +19,9 @@
 //-----------------------------------------------------------------------------
 
 // platform select
-#define SF_PLATFORM_SEL             SF_REE_MTK
+#define SF_PLATFORM_SEL             SF_TEE_BEANPOD
 // compatible select
-#define SF_COMPATIBLE_SEL           SF_COMPATIBLE_REE //SF_COMPATIBLE_NOF
+#define SF_COMPATIBLE_SEL           SF_COMPATIBLE_NOF_BP_V2_7
 // power mode select
 #define SF_POWER_MODE_SEL           PWR_MODE_NOF
 // debug log select
@@ -29,7 +29,7 @@
 //-----------------------------------------------------------------------------
 
 /* Dts node. */
-#define COMPATIBLE_SW_FP            "mediatek,mt6753-fingerprint"
+#define COMPATIBLE_SW_FP            "sunwave,sunwave_fp"
 
 // for not mediatek
 #define COMPATIBLE_RESET_GPIO       "sunwave,gpio_reset"
@@ -39,9 +39,9 @@
 //for mediatek pinctl system
 #define FINGER_POWER_ON             "finger_power_high"
 #define FINGER_POWER_OFF            "finger_power_low"
-#define FINGER_RESET_LOW            "fingerprint_reset_low"
-#define FINGER_RESET_HIGH           "fingerprint_reset_high"
-#define FINGER_INT_SET              "fingerprint_pin_irq"
+#define FINGER_RESET_LOW            "finger_rst_low"
+#define FINGER_RESET_HIGH           "finger_rst_high"
+#define FINGER_INT_SET              "eint_as_int"
 // spi dts config enable
 #define SF_SPI_DTS_CS               0
 #define SF_SPI_DTS_Ck               0
@@ -61,21 +61,16 @@
 #define FINGER_MO_PD                "mosi_pull_down"
 
 /* regulator VDD select */
-#define SF_VDD_NAME                 "vfingerprint"
+#define SF_VDD_NAME                 "VDD"
 #define SF_VDD_MIN_UV               2800000
 #define SF_VDD_MAX_UV               2800000
 //-----------------------------------------------------------------------------
 
-#define ANDROID_WAKELOCK            1
 #define SF_INT_TRIG_HIGH            0
 //-----------------------------------------------------------------------------
 
-//for mtk6739 kernel4.4 spi speed mode
-#ifdef CONFIG_MACH_MT6739
-#define MTK_6739_SPEED_MODE         1
-#else
-#define MTK_6739_SPEED_MODE         1
-#endif
+// default set 0, 0: register platform device by dts file, 1: register platform device by driver
+#define SF_REG_DEVICE_BY_DRIVER     0
 //-----------------------------------------------------------------------------
 
 //for qualcomm ree spi deassert wait time
