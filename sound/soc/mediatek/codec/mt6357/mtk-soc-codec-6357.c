@@ -3618,6 +3618,17 @@ static int Speaker_Amp_Set(struct snd_kcontrol *kcontrol,
 	}
 	return 0;
 }
+
+//added by xen 20171013
+#if defined(AUDIO_PA_MODE4)
+#define AUDIO_PA_MODE  4
+#elif defined(AUDIO_PA_MODE2)
+#define AUDIO_PA_MODE  2
+#elif defined(AUDIO_PA_MODE1)
+#define AUDIO_PA_MODE  1
+#else
+#define AUDIO_PA_MODE  3
+#endif
 static void Ext_Speaker_Amp_Change(bool enable)
 {
 	pr_debug("%s(), enable %d\n", __func__, enable);
@@ -3626,7 +3637,7 @@ static void Ext_Speaker_Amp_Change(bool enable)
 		AudDrv_GPIO_EXTAMP_Select(false, 3);
 		/*udelay(1000); */
 		usleep_range(1 * 1000, 2 * 1000);
-		AudDrv_GPIO_EXTAMP_Select(true, 3);
+		AudDrv_GPIO_EXTAMP_Select(true, AUDIO_PA_MODE);//3); //modified by xen 20171013
 		usleep_range(5 * 1000, 10 * 1000);
 	} else {
 		AudDrv_GPIO_EXTAMP_Select(false, 3);
