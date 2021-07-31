@@ -181,6 +181,11 @@ int LCD_LayerEnable(int id, BOOL enable);
 
 #include "tpd_default.h"
 
+#if defined(CONFIG_TERACUBE_2E)
+//#define TP_GESTURE_FLAG_FILE     "tp_gesture"
+extern u8 gesture_open_state;
+#endif
+
 /* switch touch panel into different mode */
 void _tpd_switch_single_mode(void);
 void _tpd_switch_multiple_mode(void);

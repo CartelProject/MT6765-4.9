@@ -101,3 +101,28 @@ obj-$(CONFIG_TOUCHSCREEN_ZFORCE)	+= zforce_ts.o
 obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
 obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_TD4322) += synaptics_dsx_td4322/
+
+# added by xen for gslX680 compile
+ifneq ($(findstring gslX680, $(strip $(CUSTOM_KERNEL_TOUCHPANEL))),)
+ifeq ($(CONFIG_ARM64_CRYPTO),y)
+obj-y += gsl_point_id_arm64.o
+$(obj)/gsl_point_id_arm64.o: $(srctree)/$(obj)/gsl_point_id_arm64
+	cp $(srctree)/$(obj)/gsl_point_id_arm64 $(obj)/gsl_point_id_arm64.o
+else
+obj-y += gsl_point_id.o
+$(obj)/gsl_point_id.o: $(srctree)/$(obj)/gsl_point_id
+	cp $(srctree)/$(obj)/gsl_point_id $(obj)/gsl_point_id.o
+endif
+endif
+
+ifneq ($(findstring gsl2XXX, $(strip $(CUSTOM_KERNEL_TOUCHPANEL))),)
+ifeq ($(CONFIG_ARM64),y)
+obj-y += gsl_point_id_gsl2xxx_arm64.o
+$(obj)/gsl_point_id_gsl2xxx_arm64.o: $(srctree)/$(obj)/gsl_point_id_gsl2xxx_arm64
+	cp $(srctree)/$(obj)/gsl_point_id_gsl2xxx_arm64 $(obj)/gsl_point_id_gsl2xxx_arm64.o
+else
+obj-y += gsl_point_id_gsl2xxx.o
+$(obj)/gsl_point_id_gsl2xxx.o: $(srctree)/$(obj)/gsl_point_id_gsl2xxx
+	cp $(srctree)/$(obj)/gsl_point_id_gsl2xxx $(obj)/gsl_point_id_gsl2xxx.o
+endif
+endif
