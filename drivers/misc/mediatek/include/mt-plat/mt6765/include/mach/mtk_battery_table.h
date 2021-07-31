@@ -10,7 +10,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
  */
-
+#if defined(CONFIG_TERACUBE_2E)
+#include "mtk_battery_table_yk673_trx_s607.h"
+#else
 #ifndef _MTK_BATTERY_TABLE_H
 #define _MTK_BATTERY_TABLE_H
 
@@ -212,7 +214,7 @@ int g_temperature[MAX_TABLE] = {
 #define BIF_NTC_R 16000
 
 #if (BAT_NTC_10 == 1)
-struct FUELGAUGE_TEMPERATURE Fg_Temperature_Table[21] = {
+struct FUELGAUGE_TEMPERATURE Fg_Temperature_Table[24] = {
 		{-40, 195652},
 		{-35, 148171},
 		{-30, 113347},
@@ -233,7 +235,10 @@ struct FUELGAUGE_TEMPERATURE Fg_Temperature_Table[21] = {
 		{45, 4917},
 		{50, 4161},
 		{55, 3535},
-		{60, 3014}
+		{60, 3014},
+		{65, 2609},
+		{70, 2249},
+		{75, 1947}
 };
 #endif
 
@@ -4008,4 +4013,5 @@ struct FUELGAUGE_PROFILE_STRUCT fg_profile_t9[TOTAL_BATTERY_NUMBER][90] = {
  * ============================================================
  */
 
+#endif
 #endif

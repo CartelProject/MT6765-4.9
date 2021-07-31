@@ -17,12 +17,23 @@
 /* customize */
 #define DIFFERENCE_FULLOCV_ITH	200	/* mA */
 #define MTK_CHR_EXIST 1
+#define SHUTDOWN_1_TIME	60 //xjl 20200229
 #define KEEP_100_PERCENT 1
 #define R_FG_VALUE	10				/* mOhm */
-#define EMBEDDED_SEL 0
+#define EMBEDDED_SEL 1 //0 //xjl 20191017
 #define PMIC_SHUTDOWN_CURRENT 20	/* 0.01 mA */
-#define FG_METER_RESISTANCE	75
+#define FG_METER_RESISTANCE	100  //75 /*unit: 0.1mOhm*/ //xjl 20200229
+#if defined(YK672_MT61_CONFIG)
+#define CAR_TUNE_VALUE	95
+#elif defined(YK676_CONFIG)
+#define CAR_TUNE_VALUE	87 //86 //xjl 20190507
+#elif defined(YK686_CONFIG)
+#define CAR_TUNE_VALUE	90
+#elif defined(YK676V2_CONFIG) //xjl 20190805
+#define CAR_TUNE_VALUE	88
+#else
 #define CAR_TUNE_VALUE	100 /*1.00 */
+#endif
 #define NO_BAT_TEMP_COMPENSATE 0
 /* NO_BAT_TEMP_COMPENSATE 1 = don't need bat_temper compensate, */
 /* but fg_meter_resistance still use for SWOCV */
@@ -33,7 +44,7 @@
 /* enable that uisoc = 1 and wait xmins then shutdown */
 #define SHUTDOWN_GAUGE1_XMINS 1
 /* define Xmins to shutdown*/
-#define SHUTDOWN_1_TIME	5
+//#define SHUTDOWN_1_TIME	5 //xjl 20190805 delete
 
 #define SHUTDOWN_GAUGE1_VBAT_EN 1
 #define SHUTDOWN_GAUGE1_VBAT 34000
@@ -134,9 +145,17 @@
 #define HWOCV_SWOCV_DIFF_LT	1500
 #define HWOCV_SWOCV_DIFF_LT_TEMP	5
 #define HWOCV_OLDOCV_DIFF	300
+#if defined(YK676_CUSTOMER_CAIFU_BSH18_HDPLUS)||defined(YK676_CUSTOMER_CAIFU_BSQ06_HDPLUS)
+#define HWOCV_OLDOCV_DIFF_CHR	1500 //1200 //zxs 20190627 //800
+#else
 #define HWOCV_OLDOCV_DIFF_CHR	800
+#endif
 #define SWOCV_OLDOCV_DIFF	300
+#if defined(YK676_CUSTOMER_CAIFU_BSH18_HDPLUS)||defined(YK676_CUSTOMER_CAIFU_BSQ06_HDPLUS)
+#define SWOCV_OLDOCV_DIFF_CHR	1500 //1200 //zxs 20190627 //800
+#else
 #define SWOCV_OLDOCV_DIFF_CHR	800
+#endif
 #define VBAT_OLDOCV_DIFF	1000
 #define SWOCV_OLDOCV_DIFF_EMB		1000	/* 100mV */
 

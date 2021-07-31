@@ -17,12 +17,21 @@
 /* customize */
 #define DIFFERENCE_FULLOCV_ITH	200	/* mA */
 #define MTK_CHR_EXIST 1
+#define SHUTDOWN_1_TIME	5//cjc 60
 #define KEEP_100_PERCENT 1
 #define R_FG_VALUE	10				/* mOhm */
-#define EMBEDDED_SEL 0
+#define EMBEDDED_SEL 0 //xjl 20200511
 #define PMIC_SHUTDOWN_CURRENT 20	/* 0.01 mA */
-#define FG_METER_RESISTANCE	75
+#define FG_METER_RESISTANCE	100  //75 /*unit: 0.1mOhm*/ //xjl 20200111
+#if defined(YK676V6_CONFIG)
+#define CAR_TUNE_VALUE	87
+#elif defined(YK685_CONFIG)
+#define CAR_TUNE_VALUE	90
+#elif defined(CONFIG_TERACUBE_2E)
+#define CAR_TUNE_VALUE	92
+#else
 #define CAR_TUNE_VALUE	100 /*1.00 */
+#endif
 #define NO_BAT_TEMP_COMPENSATE 0
 /* NO_BAT_TEMP_COMPENSATE 1 = don't need bat_temper compensate, */
 /* but fg_meter_resistance still use for SWOCV */
@@ -33,7 +42,7 @@
 /* enable that uisoc = 1 and wait xmins then shutdown */
 #define SHUTDOWN_GAUGE1_XMINS 1
 /* define Xmins to shutdown*/
-#define SHUTDOWN_1_TIME	5
+//#define SHUTDOWN_1_TIME	5 //xjl 20200111
 
 #define SHUTDOWN_GAUGE1_VBAT_EN 1
 #define SHUTDOWN_GAUGE1_VBAT 34000
@@ -70,13 +79,13 @@
 #define QMAX_SEL 1
 #define IBOOT_SEL 0
 #define SHUTDOWN_SYSTEM_IBOOT 15000	/* 0.1mA */
-#define PMIC_MIN_VOL 33500
+#define PMIC_MIN_VOL 33000 //33500 //xjl 20200111
 
 /*ui_soc related */
 #define DIFFERENCE_FULL_CV 1000 /*0.01%*/
 #define PSEUDO1_EN 1
 #define PSEUDO100_EN 1
-#define PSEUDO100_EN_DIS 1
+#define PSEUDO100_EN_DIS 0 //1 //xjl 20200111
 
 #define DIFF_SOC_SETTING 50	/* 0.01% */
 #define DIFF_BAT_TEMP_SETTING 1
@@ -134,9 +143,9 @@
 #define HWOCV_SWOCV_DIFF_LT	1500
 #define HWOCV_SWOCV_DIFF_LT_TEMP	5
 #define HWOCV_OLDOCV_DIFF	300
-#define HWOCV_OLDOCV_DIFF_CHR	800
+#define HWOCV_OLDOCV_DIFF_CHR	3500 //800 cjc
 #define SWOCV_OLDOCV_DIFF	300
-#define SWOCV_OLDOCV_DIFF_CHR	800
+#define SWOCV_OLDOCV_DIFF_CHR	3500 //800 cjc
 #define VBAT_OLDOCV_DIFF	1000
 #define SWOCV_OLDOCV_DIFF_EMB	1000	/* 100mV */
 
@@ -153,9 +162,15 @@
 #define EXT_HWOCV_SWOCV_LT_TEMP		5
 
 /* fgc & fgv threshold */
+#if 0//defined(YK685_CUSTOMER_CAIFU2_BSM01_HDPLUS) //xjl 20200403
+#define DIFFERENCE_FGC_FGV_TH1 250
+#define DIFFERENCE_FGC_FGV_TH2 450
+#define DIFFERENCE_FGC_FGV_TH3 250
+#else
 #define DIFFERENCE_FGC_FGV_TH1 300
 #define DIFFERENCE_FGC_FGV_TH2 500
 #define DIFFERENCE_FGC_FGV_TH3 300
+#endif
 #define DIFFERENCE_FGC_FGV_TH_SOC1 7000
 #define DIFFERENCE_FGC_FGV_TH_SOC2 3000
 #define NAFG_TIME_SETTING 10
@@ -244,7 +259,7 @@
 
 /* using voltage to limit uisoc in 1% case */
 /* UI_LOW_LIMIT_VTH0=36000 means 3.6v */
-#define UI_LOW_LIMIT_EN 1
+#define UI_LOW_LIMIT_EN 0//cjc 1
 
 #define UI_LOW_LIMIT_SOC0 200
 #define UI_LOW_LIMIT_VTH0 34500
