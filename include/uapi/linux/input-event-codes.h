@@ -336,6 +336,48 @@
 
 #define KEY_MICMUTE		248	/* Mute / unmute the microphone */
 
+//added by xen for test hall Function 20150427
+#define KEY_HALL_CLOSE          250
+#define KEY_HALL_FARAWAY    251
+// wanghe 2014-01-07 for ALSPS_GESTURE
+#define KEY_GESTURE_UP         252
+#define KEY_GESTURE_DOWN   253
+#define KEY_GESTURE_LEFT   254
+#define KEY_GESTURE_RIGHT   255
+
+//xen 20151130
+#define KEY_WEIXIN          256
+#define KEY_SOS             257
+
+//xjl 2014-01-16 for CONFIG_TERACUBE_2E
+#define KEY_TPGESTURE_UP		452
+#define KEY_TPGESTURE_DOWN		453
+#define KEY_TPGESTURE_LEFT		454
+#define KEY_TPGESTURE_RIGHT		455
+#define KEY_TPGESTURE_DOUBLE	456
+#define KEY_TPGESTURE_C			457
+#define KEY_TPGESTURE_E			458
+#define KEY_TPGESTURE_M			459
+#define KEY_TPGESTURE_O			460
+#define KEY_TPGESTURE_S			461
+#define KEY_TPGESTURE_V			462
+#define KEY_TPGESTURE_W			485
+#define KEY_TPGESTURE_Z			486
+#define KEY_TPGESTURE_ARROWUP	487
+#define KEY_TPGESTURE_ARROWRIGHT	488
+
+/*added by xen for camera shelter 20170301*/
+#define KEY_CAM_SHELTER_NEAR	489
+#define KEY_CAM_SHELTER_FAR	490
+/*added by xen for camera shelter 20170301*/
+
+/*added by xen for YK568 translator machine 20180102 */
+#define KEY_TRANSLATE_1         491
+#define KEY_TRANSLATE_2         492
+#define KEY_TRANSLATE_3         493   //study plus translation
+#define KEY_TALKBACK            494
+/*added by xen for YK568 translator machine 20180102 */
+
 /* Code 255 is reserved for special needs of AT keyboard driver */
 
 #define BTN_MISC		0x100
