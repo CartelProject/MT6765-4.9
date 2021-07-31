@@ -1,0 +1,55 @@
+
+/* FINGERPRINT start */
+
+&pio {
+     fingerprint_pins_fp_default: fp_default {
+     };
+	fingerprint_pins_finger_rst_low: finger_rst_low {
+		pins_cmd_dat {
+		   pinmux = <PINMUX_GPIO5__FUNC_GPIO5>;
+		   slew-rate = <1>;
+		   output-low;
+		};
+	};
+	fingerprint_pins_finger_rst_high: finger_rst_high {
+		   pins_cmd_dat {
+		   pinmux = <PINMUX_GPIO5__FUNC_GPIO5>;
+		   slew-rate = <1>;
+		   output-high;
+		};
+	};
+	fingerprint_pins_eint_as_int: eint_as_int {
+               pins_cmd_dat {
+               pinmux = <PINMUX_GPIO4__FUNC_GPIO4>;
+               slew-rate = <0>;
+               bias-disable;
+            };
+    };
+};
+
+&spi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	spi-num-chipselects = <0>;
+          sunwave_fp@0{	
+		compatible = "mediatek,sunwave_fp";
+		cs-gpios = < &pio 156 0>;
+		reg = <0x0>;
+		spi-max-frequency = <8000000>;	
+		status = "okay";
+	};
+};
+
+&sunwave_fp{
+	pinctrl-names = "fp_default","finger_rst_low","finger_rst_high","eint_as_int";
+	pinctrl-0 = <&fingerprint_pins_fp_default>;
+	pinctrl-1 = <&fingerprint_pins_finger_rst_low>;
+	pinctrl-2 = <&fingerprint_pins_finger_rst_high>;
+	pinctrl-3 = <&fingerprint_pins_eint_as_int>;
+
+	interrupt-parent = <&pio>;
+	interrupts = <4 IRQ_TYPE_EDGE_FALLING 4 0>;		
+	status = "okay";
+};
+
+/* FINGERPRINT end */
