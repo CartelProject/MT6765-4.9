@@ -133,6 +133,8 @@ static int EEPROM_get_cmd_info(unsigned int sensorID,
 					pCamCalList[i].readCamCalData;
 				cmdInfo->maxEepromSize =
 					pCamCalList[i].maxEepromSize;
+//cjc add
+				cmdInfo->writeCMDFunc = Common_write_region;
 
 				/*
 				 * Default 8K for Common_read_region driver
