@@ -560,4 +560,12 @@ config MTK_DM_VERITY_OFF
 	bool "Disable dm-verity"
 	default n
 
+config TERACUBE_2E
+	bool "Enable Teracube 2e changes"
+	default n
+	help
+	  Enable if the target machine is Teracube 2e. This config
+	  enables several changes needed by the 2e.
+	  If unsure, set n.
+
 endmenu    # Misc
