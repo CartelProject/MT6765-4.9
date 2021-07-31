@@ -2916,9 +2916,13 @@ static int regulator_set_voltage_unlocked(struct regulator *regulator,
 	regulator->min_uV = min_uV;
 	regulator->max_uV = max_uV;
 
+//if(max_uV > min_uV)//cjc add for camera vcamd regulator set fail from 1.5 to 1.2
+//{
 	ret = regulator_check_consumers(rdev, &min_uV, &max_uV);
+	//pr_err("[regulator_set_voltage_unlocked]xjl3 ret=%d\n",ret); //xjl 20180615
 	if (ret < 0)
 		goto out2;
+//}// cjc del for bsm01 can not open back camera
 
 	if (rdev->supply && (rdev->desc->min_dropout_uV ||
 				!rdev->desc->ops->get_voltage)) {
