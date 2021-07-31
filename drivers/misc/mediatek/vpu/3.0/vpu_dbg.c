@@ -27,8 +27,6 @@
 #include "vpu_dbg.h"
 #include "vpu_drv.h"
 #include "vpu_cmn.h"
-#include "vpu_dump.h"
-#include "vpu_hw.h"
 
 #define ALGO_OF_MAX_POWER  (3)
 
@@ -36,9 +34,6 @@
 int g_vpu_log_level = 1;
 int g_vpu_internal_log_level;
 unsigned int g_func_mask;
-
-static ssize_t vpu_debug_vpu_memory_write(struct file *filp,
-	const char __user *buffer, size_t count, loff_t *f_pos);
 
 static int vpu_log_level_set(void *data, u64 val)
 {
@@ -97,7 +92,7 @@ DEFINE_SIMPLE_ATTRIBUTE(vpu_debug_func_mask_fops, vpu_func_mask_get,
 				vpu_func_mask_set, "%llu\n");
 
 
-#define VPU_DEBUGFS_FOP_DEF(name) \
+#define IMPLEMENT_VPU_DEBUGFS(name)					\
 static int vpu_debug_## name ##_show(struct seq_file *s, void *unused)\
 {					\
 	vpu_dump_## name(s);		\
@@ -108,24 +103,11 @@ static int vpu_debug_## name ##_open(struct inode *inode, struct file *file) \
 	return single_open(file, vpu_debug_ ## name ## _show, \
 				inode->i_private); \
 }                                                                             \
-
-#define IMPLEMENT_VPU_DEBUGFS(name)	\
-	VPU_DEBUGFS_FOP_DEF(name) \
-static const struct file_operations vpu_debug_ ## name ## _fops = { \
-	.open = vpu_debug_ ## name ## _open, \
-	.read = seq_read, \
-	.llseek = seq_lseek, \
-	.release = seq_release, \
-}
-
-#define IMPLEMENT_VPU_DEBUGFS_RW(name)	\
-	VPU_DEBUGFS_FOP_DEF(name) \
-static const struct file_operations vpu_debug_ ## name ## _fops = { \
-	.open = vpu_debug_ ## name ## _open, \
-	.read = seq_read, \
-	.write = vpu_debug_ ## name ## _write, \
-	.llseek = seq_lseek, \
-	.release = seq_release, \
+static const struct file_operations vpu_debug_ ## name ## _fops = {   \
+	.open = vpu_debug_ ## name ## _open,                               \
+	.read = seq_read,                                                    \
+	.llseek = seq_lseek,                                                \
+	.release = single_release,                                             \
 }
 
 /*IMPLEMENT_VPU_DEBUGFS(algo);*/
@@ -137,7 +119,7 @@ IMPLEMENT_VPU_DEBUGFS(mesg);
 IMPLEMENT_VPU_DEBUGFS(opp_table);
 IMPLEMENT_VPU_DEBUGFS(device_dbg);
 IMPLEMENT_VPU_DEBUGFS(user_algo);
-IMPLEMENT_VPU_DEBUGFS_RW(vpu_memory);
+IMPLEMENT_VPU_DEBUGFS(vpu_memory);
 
 #undef IMPLEMENT_VPU_DEBUGFS
 
@@ -294,54 +276,6 @@ static const struct file_operations vpu_debug_algo_fops = {
 	.release = seq_release,
 	.write = vpu_debug_algo_write,
 };
-
-static char *vpu_debug_simple_write(const char __user *buffer, size_t count)
-{
-	char *buf;
-	int ret;
-
-	buf = kzalloc(count + 1, GFP_KERNEL);
-	if (!buf)
-		goto out;
-
-	ret = copy_from_user(buf, buffer, count);
-	if (ret) {
-		pr_info("%s: copy_from_user: ret=%d\n", __func__, ret);
-		kfree(buf);
-		buf = NULL;
-		goto out;
-	}
-
-	buf[count] = '\0';
-out:
-	return buf;
-}
-
-static ssize_t vpu_debug_vpu_memory_write(struct file *filp,
-	const char __user *buffer, size_t count, loff_t *f_pos)
-{
-	char *buf, *cmd, *cur;
-	int i;
-
-	buf = vpu_debug_simple_write(buffer, count);
-
-	if (!buf)
-		goto out;
-
-	cur = buf;
-	cmd = strsep(&cur, " \t\n");
-	if (!strcmp(cmd, "free")) {
-		vpu_dmp_free_all();
-	} else if (!strcmp(cmd, "dump")) {
-		for (i = 0; i < MTK_VPU_CORE; i++)
-			vpu_dmp_create(i, NULL, "Dump trigger by user");
-	}
-
-	kfree(buf);
-out:
-	return count;
-}
-
 
 int vpu_init_debug(struct vpu_device *vpu_dev)
 {
