@@ -92,6 +92,9 @@ void set_uartlog_status(bool value)
 #ifdef CONFIG_MTK_PRINTK_UART_CONSOLE
 void mt_disable_uart(void)
 {
+	//printk_disable_uart = 0;
+	//return;
+
 	/* uart print not always enable */
 	if ((mt_need_uart_console != 1) && (printk_disable_uart != 2))
 		printk_disable_uart = 1;
