@@ -28,6 +28,13 @@
 #include <linux/spi/spi.h>
 #include <linux/dma-mapping.h>
 
+#ifdef CONFIG_TRUSTKERNEL_TEE_SUPPORT
+#define SPI_TRUSTKERNEL_TEE_SUPPORT
+#endif
+#ifdef SPI_TRUSTKERNEL_TEE_SUPPORT
+#include <linux/tee_clkmgr.h>
+#include <linux/tee_fp.h>
+#endif
 
 #define SPI_CFG0_REG                      0x0000
 #define SPI_CFG1_REG                      0x0004
@@ -858,6 +865,7 @@ static int mtk_spi_probe(struct platform_device *pdev)
 				goto err_put_master;
 			}
 		}
+		master->num_chipselect = mdata->pad_num;  //added:multi spi device by xen 20171025
 	}
 
 	platform_set_drvdata(pdev, master);
@@ -937,6 +945,10 @@ static int mtk_spi_probe(struct platform_device *pdev)
 
 	clk_disable_unprepare(mdata->spi_clk);
 
+#ifdef SPI_TRUSTKERNEL_TEE_SUPPORT
+	    tee_clkmgr_register1("spi", ((1 << 15) - 2) - master->bus_num, 
+	        clk_prepare_enable, clk_disable_unprepare, mdata->spi_clk);
+#endif
 	if (mdata->dev_comp->need_pad_sel) {
 		if (mdata->pad_num != master->num_chipselect) {
 			dev_err(&pdev->dev,
@@ -946,12 +958,14 @@ static int mtk_spi_probe(struct platform_device *pdev)
 			goto err_disable_runtime_pm;
 		}
 
+#if 0 //deleted:multi spi device by xen 20171025
 		if (!master->cs_gpios && master->num_chipselect > 1) {
 			dev_err(&pdev->dev,
 				"cs_gpios not specified and num_chipselect > 1\n");
 			ret = -EINVAL;
 			goto err_disable_runtime_pm;
 		}
+#endif
 
 		if (master->cs_gpios) {
 			for (i = 0; i < master->num_chipselect; i++) {
