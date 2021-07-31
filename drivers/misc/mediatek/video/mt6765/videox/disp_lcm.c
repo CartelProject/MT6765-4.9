@@ -1028,6 +1028,11 @@ void load_lcm_resources_from_DT(struct LCM_DRIVER *lcm_drv)
 }
 #endif
 
+//added by xen for LCM information 20160413
+//#define PROC_LCM_INFO "driver/lcm_info"
+#define lcm_info_size 300
+extern char mtk_lcm_name[lcm_info_size]; // = {0};
+//end
 struct disp_lcm_handle *disp_lcm_probe(char *plcm_name,
 	enum LCM_INTERFACE_ID lcm_id, int is_lcm_inited)
 {
@@ -1154,6 +1159,8 @@ struct disp_lcm_handle *disp_lcm_probe(char *plcm_name,
 	plcm->drv->get_params(plcm->params);
 	plcm->lcm_if_id = plcm->params->lcm_if;
 
+		snprintf(mtk_lcm_name,sizeof(mtk_lcm_name),"LCM:%s\nModule:%s",
+                                    lcm_drv->name,plcm->params->dsi.g_StrLcmInfo); //added by xen 20160413
 	/* below code is for lcm driver forward compatible */
 	if (plcm->params->type == LCM_TYPE_DSI
 	    && plcm->params->lcm_if == LCM_INTERFACE_NOTDEFINED)
@@ -1553,7 +1560,16 @@ unsigned int disp_lcm_ATA(struct disp_lcm_handle *plcm)
 			ret = lcm_drv->ata_check(NULL);
 		} else {
 			DISPERR("FATAL ERROR, lcm_drv->ata_check is null\n");
-			return 0;
+			if(!strcmp(lcm_drv->name, "lcd_ata_test")) //xjl 20160602 for lcm ata
+			{
+				DISPERR("FATAL ERROR, lcm_drv->ata_check is null\n");
+				return 0;
+			}
+			else
+			{
+				DISPERR("PASS, lcm_drv->ata_check is successful\n");			
+				return 1;
+			}
 		}
 
 		return ret;

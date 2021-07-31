@@ -342,9 +342,6 @@ struct disp_frame_cfg_t {
 	unsigned int hrt_idx;
 
 	bool hbm_en;
-
-	/*DynFPS*/
-	int active_config;
 };
 
 struct disp_session_info {
@@ -429,7 +426,6 @@ enum DISP_FEATURE {
 	DISP_FEATURE_RPO = 0x00000080,
 	DISP_FEATURE_FBDC = 0x00000100,
 	DISP_FEATURE_FORCE_DISABLE_AOD = 0x00000200,
-	DISP_FEATURE_DYNFPS = 0x00000800
 };
 
 struct disp_caps_info {
@@ -506,9 +502,6 @@ struct disp_layer_info {
 	int res_idx;
 	unsigned int hrt_weight;
 	unsigned int hrt_idx;
-
-	/*DynFPS*/
-	int active_config_id[2];
 };
 
 enum DISP_SCENARIO {
@@ -537,23 +530,6 @@ enum DISP_SELF_REFRESH_TYPE {
 	REFRESH_FOR_IDLE,
 	REFRESH_TYPE_NUM,
 };
-
-
-/*DynFPS start*/
-#define MULTI_CONFIG_NUM 2
-struct dyn_config_info {
-	unsigned int vsyncFPS;
-	unsigned int vact_timing_fps;/*active timing fps*/
-	unsigned int width;
-	unsigned int height;
-};
-
-/*only primary_display support*/
-struct multi_configs {
-	unsigned int config_num;
-	struct dyn_config_info dyn_cfgs[MULTI_CONFIG_NUM];
-};
-/*DynFPS end*/
 
 /* IOCTL commands. */
 #define DISP_IOW(num, dtype)     _IOW('O', num, dtype)
@@ -619,8 +595,6 @@ struct multi_configs {
 	DISP_IOW(226, unsigned int)
 #define DISP_IOCTL_WAIT_DISP_SELF_REFRESH	\
 	DISP_IOW(227, unsigned int)
-#define DISP_IOCTL_GET_MULTI_CONFIGS	\
-	DISP_IOR(231, struct multi_configs)
 #ifdef __KERNEL__
 
 int disp_mgr_get_session_info(struct disp_session_info *info);

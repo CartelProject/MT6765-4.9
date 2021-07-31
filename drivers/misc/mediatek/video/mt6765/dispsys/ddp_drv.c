@@ -650,6 +650,7 @@ static void __exit disp_exit(void)
 
 static int __init disp_late(void)
 {
+#ifdef YK_INCELL_LCM_SUPPORT //xjl 20181024 for bottom current
 	int ret = 0;
 
 	DDPMSG("disp driver(1) disp_late begin\n");
@@ -659,7 +660,7 @@ static int __init disp_late(void)
 		pr_info("get dsv_pos fail, ret = %d\n", ret);
 
 	display_bias_enable();
-
+#endif
 	DDPMSG("disp driver(1) disp_late end\n");
 	return 0;
 }

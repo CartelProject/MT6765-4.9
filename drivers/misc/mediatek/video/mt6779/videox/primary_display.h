@@ -277,8 +277,7 @@ struct display_primary_path_context {
 #define LCM_FPS_ARRAY_SIZE	32
 struct lcm_fps_ctx_t {
 	int is_inited;
-	spinlock_t lock;
-	atomic_t skip_update;
+	struct mutex lock;
 	unsigned int dsi_mode;
 	unsigned int head_idx;
 	unsigned int num;
@@ -410,7 +409,6 @@ int primary_display_hbm_wait(bool en);
 int primary_display_pause(PRIMARY_DISPLAY_CALLBACK callback,
 			  unsigned int user_data);
 int primary_display_switch_dst_mode(int mode);
-int primary_display_switch_aod_mode(int mode);
 int primary_display_get_lcm_index(void);
 int primary_display_force_set_fps(unsigned int keep, unsigned int skip);
 int primary_display_set_fps(int fps);

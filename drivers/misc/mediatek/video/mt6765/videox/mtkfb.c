@@ -76,7 +76,7 @@
 
 #include <mt-plat/mtk_ccci_common.h>
 #include "ddp_dsi.h"
-
+#include <linux/proc_fs.h>  // xen 20160413
 #ifdef CONFIG_MTK_SMI_EXT
 #include "smi_public.h"
 #endif
@@ -2470,6 +2470,28 @@ static struct fb_info *allocate_fb_by_index(struct device *dev)
 }
 #endif
 
+//added by xen for LCM information 20160413
+#define PROC_LCM_INFO "driver/lcm_info"
+#define lcm_info_size 300
+char mtk_lcm_name[lcm_info_size] = {0};
+static int subsys_lcm_info_read(struct seq_file *m, void *v)
+{
+   //PK_ERR("subsys_tp_info_read %s\n",mtk_tp_name);
+   seq_printf(m, "%s\n",mtk_lcm_name);
+   return 0;
+};
+
+static int proc_lcm_info_open(struct inode *inode, struct file *file)
+{
+    return single_open(file, subsys_lcm_info_read, NULL);
+};
+
+static  struct file_operations lcm_proc_fops1 = {
+    .owner = THIS_MODULE,
+    .open  = proc_lcm_info_open,
+    .read  = seq_read,
+};
+//end
 static int mtkfb_probe(struct platform_device *pdev)
 {
 	struct mtkfb_device *fbdev = NULL;
@@ -2501,6 +2523,11 @@ static int mtkfb_probe(struct platform_device *pdev)
 	_parse_tag_videolfb();
 
 	init_state = 0;
+
+//added by xen for display LCM info 20160413
+       memset(mtk_lcm_name,0,lcm_info_size);
+       proc_create(PROC_LCM_INFO, 0, NULL, &lcm_proc_fops1);
+/////////////////////////////////////////////////
 
 	/* pdev = to_platform_device(dev); */
 	/* repo call DTS gpio module, if not necessary, invoke nothing */

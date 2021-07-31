@@ -819,6 +819,7 @@ static void _vdo_mode_enter_idle(void)
 	disp_pm_qos_set_ovl_bw(in_fps, out_fps, &bandwidth);
 	disp_pm_qos_update_bw(bandwidth);
 #endif
+	lcm_fps_ctx_reset(&lcm_fps_ctx);
 }
 
 static void _vdo_mode_leave_idle(void)
@@ -878,6 +879,7 @@ static void _vdo_mode_leave_idle(void)
 	disp_pm_qos_set_ovl_bw(in_fps, out_fps, &bandwidth);
 	disp_pm_qos_update_bw(bandwidth);
 #endif
+	lcm_fps_ctx_reset(&lcm_fps_ctx);
 }
 
 static void _cmd_mode_enter_idle(void)
@@ -910,6 +912,7 @@ static void _cmd_mode_enter_idle(void)
 		primary_display_request_dvfs_perf(SMI_BWC_SCEN_UI_IDLE,
 					  HRT_LEVEL_LEVEL0);
 #endif
+	lcm_fps_ctx_reset(&lcm_fps_ctx);
 }
 
 static void _cmd_mode_leave_idle(void)
@@ -951,6 +954,7 @@ static void _cmd_mode_leave_idle(void)
 	disp_pm_qos_set_ovl_bw(in_fps, out_fps, &bandwidth);
 	disp_pm_qos_update_bw(bandwidth);
 #endif
+	lcm_fps_ctx_reset(&lcm_fps_ctx);
 }
 
 void primary_display_idlemgr_enter_idle_nolock(void)
@@ -1041,66 +1045,6 @@ static int get_rsz_ratio(void)
 	return (ratio_w >= ratio_h) ? ratio_w : ratio_h;
 }
 
-static bool check_dim_layer(void)
-{
-	struct disp_ddp_path_config *config =
-		dpmgr_path_get_last_config(primary_get_dpmgr_handle());
-	struct OVL_CONFIG_STRUCT *cfg;
-	int i = 0;
-	bool exist = 0;
-
-	for (i = 0; i < TOTAL_OVL_LAYER_NUM; i++) {
-		cfg = &config->ovl_config[i];
-		if (cfg->layer_en &&
-			cfg->source == OVL_LAYER_SOURCE_RESERVED) {
-			exist = 1;
-			break;
-		}
-	}
-
-	return exist;
-}
-
-static int has_yuv_layer(void)
-{
-	struct disp_ddp_path_config *config =
-		dpmgr_path_get_last_config(primary_get_dpmgr_handle());
-	struct OVL_CONFIG_STRUCT *ovl_cfg;
-	enum UNIFIED_COLOR_FMT fmt;
-	int i = 0;
-
-	for (i = 0; i < TOTAL_OVL_LAYER_NUM; i++) {
-		ovl_cfg = &config->ovl_config[i];
-		if (ovl_cfg->layer_en == 0)
-			continue;
-
-		fmt = ovl_cfg->fmt;
-		if (fmt == UFMT_UYVY || fmt == UFMT_VYUY ||
-		    fmt == UFMT_YUYV || fmt == UFMT_YVYU)
-			return 1;
-	}
-
-	return 0;
-}
-
-/* small video would shake due to low resolution */
-static int rsz_skip_idle(void)
-{
-	int ratio = get_rsz_ratio();
-
-	if (ratio >= MAX_IDLE_RSZ_RATIO) {
-		DISPINFO("%s ratio:%d\n", __func__, ratio);
-		return 1;
-	}
-
-	if (ratio > 100 && has_yuv_layer()) {
-		DISPINFO("%s ratio:%d, has yuv\n", __func__, ratio);
-		return 1;
-	}
-
-	return 0;
-}
-
 static int _primary_path_idlemgr_monitor_thread(void *data)
 {
 	int ret = 0;
@@ -1142,13 +1086,6 @@ static int _primary_path_idlemgr_monitor_thread(void *data)
 			continue;
 		}
 
-		/* Do not enter idle when we needs calculate FPS */
-		if (atomic_read(&lcm_fps_ctx.skip_update) == 0) {
-			DISPMSG("skip idle due to fps calculation\n");
-			primary_display_manual_unlock();
-			continue;
-		}
-
 #ifdef CONFIG_MTK_DISPLAY_120HZ_SUPPORT
 		if (primary_display_get_lcm_refresh_rate() == 120) {
 			primary_display_manual_unlock();
@@ -1157,12 +1094,7 @@ static int _primary_path_idlemgr_monitor_thread(void *data)
 #endif
 
 		if (primary_display_is_video_mode() &&
-			rsz_skip_idle()) {
-			primary_display_manual_unlock();
-			continue;
-		}
-
-		if (primary_display_is_video_mode() && check_dim_layer()) {
+			get_rsz_ratio() >= MAX_IDLE_RSZ_RATIO) {
 			primary_display_manual_unlock();
 			continue;
 		}
