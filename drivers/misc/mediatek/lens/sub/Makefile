@@ -29,6 +29,7 @@ ifeq ($(CONFIG_MTK_LENS_USE_MODULE), y)
 
 SUB_CFILES += sub_lens.c
 
+SUB_CFILES  += common/fm50af/FM50AF.c
 SUB_CFILES  += common/bu6424af/BU6424AF.c
 SUB_CFILES  += common/bu6429af/BU6429AF.c
 SUB_CFILES += common/dw9714af/DW9714AF.c
@@ -44,6 +45,7 @@ subaf-objs := $(SUB_CFILES:.c=.o)
 else
 
 obj-y  += sub_lens.o
+obj-y  += common/fm50af/
 obj-y  += common/bu6424af/
 obj-y  += common/bu6429af/
 obj-y  += common/dw9714af/

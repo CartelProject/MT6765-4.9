@@ -16,7 +16,9 @@
  *
  *
  */
-
+#if defined(YK676_CUSTOMER_CAIFU_BSQ06_HDPLUS)||defined(YK676_CUSTOMER_CAIFU_BSH18_HDPLUS)
+#include "FM24VS64RAF.h"
+#else
 #include <linux/delay.h>
 #include <linux/fs.h>
 #include <linux/i2c.h>
@@ -219,6 +221,13 @@ int FM50AF_Release(struct inode *a_pstInode, struct file *a_pstFile)
 		spin_lock(g_pAF_SpinLock);
 		*g_pAF_Opened = 0;
 		spin_unlock(g_pAF_SpinLock);
+
+ //xen for low power 20171121 while AF power cannot disable when exit cam app
+		s4AF_WriteReg(0x8000);
+		msleep(20);
+		s4AF_WriteReg(0);
+		msleep(20);
+ //xen for low power 20171121
 	}
 
 	LOG_INF("End\n");
@@ -255,3 +264,4 @@ int FM50AF_GetFileName(unsigned char *pFileName)
 	#endif
 	return 1;
 }
+#endif

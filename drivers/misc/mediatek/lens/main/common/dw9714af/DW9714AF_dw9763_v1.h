@@ -16,11 +16,6 @@
  *
  *
  */
-#if defined(DW9763_V1_LENS_SUPPORT) //xjl 20181119
-#include "DW9714AF_dw9763_v1.h"
-#elif defined(YK676_CUSTOMER_TRX_S606_HDPLUS) //xjl 20200108
-#include "DW9714AF_TRX_S606.h"        
-#else
 
 #include <linux/delay.h>
 #include <linux/fs.h>
@@ -75,14 +70,13 @@ static int s4AF_WriteReg(u16 a_u2Data)
 {
 	int i4RetValue = 0;
 
-	char puSendCmd[2] = {(char)(a_u2Data >> 4),
-			     (char)((a_u2Data & 0xF) << 4)};
+	char puSendCmd[3] = { 0x03, (char)(a_u2Data >> 8), (char)(a_u2Data & 0xFF) };
 
 	g_pstAF_I2Cclient->addr = AF_I2C_SLAVE_ADDR;
 
 	g_pstAF_I2Cclient->addr = g_pstAF_I2Cclient->addr >> 1;
 
-	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 2);
+	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd,3);
 
 	if (i4RetValue < 0) {
 		LOG_INF("I2C send failed!!\n");
@@ -122,6 +116,17 @@ static int initAF(void)
 
 	if (*g_pAF_Opened == 1) {
 
+		char puSendCmd4[2] = { 0x02, 0x02 };
+		char puSendCmd6[2] = { 0x06, /*0x61 }; /*/0xA0};
+		char puSendCmd7[2] = { 0x07, /*0x39 }; /*/0x01};
+		
+		g_pstAF_I2Cclient->addr = AF_I2C_SLAVE_ADDR;
+		g_pstAF_I2Cclient->addr = g_pstAF_I2Cclient->addr >> 1;
+		
+		i2c_master_send(g_pstAF_I2Cclient, puSendCmd4, 2);
+		i2c_master_send(g_pstAF_I2Cclient, puSendCmd6, 2);
+		i2c_master_send(g_pstAF_I2Cclient, puSendCmd7, 2);
+		
 		spin_lock(g_pAF_SpinLock);
 		*g_pAF_Opened = 2;
 		spin_unlock(g_pAF_SpinLock);
@@ -208,7 +213,15 @@ int DW9714AF_Release(struct inode *a_pstInode, struct file *a_pstFile)
 
 	if (*g_pAF_Opened == 2) {
 		LOG_INF("Wait\n");
-		s4AF_WriteReg(0x80); /* Power down mode */
+		//g_SR = 5;
+		s4AF_WriteReg(250);
+		msleep(20);
+		s4AF_WriteReg(200); 
+		msleep(20);
+		s4AF_WriteReg(150);
+		msleep(20);
+		s4AF_WriteReg(100);
+		msleep(20);
 	}
 
 	if (*g_pAF_Opened) {
@@ -253,5 +266,3 @@ int DW9714AF_GetFileName(unsigned char *pFileName)
 	#endif
 	return 1;
 }
-#endif
-

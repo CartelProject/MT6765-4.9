@@ -35,6 +35,7 @@ ifeq ($(CONFIG_MTK_LENS_USE_MODULE), y)
 
 MAIN_CFILES += main_lens.c
 
+MAIN_CFILES  += common/fm50af/FM50AF.c
 MAIN_CFILES  += common/fp5510e2af/FP5510E2AF.c
 MAIN_CFILES  += common/bu6424af/BU6424AF.c
 MAIN_CFILES  += common/bu6429af/BU6429AF.c
@@ -80,30 +81,45 @@ mainaf-objs := $(MAIN_CFILES:.c=.o)
 else
 
 obj-y  += main_lens.o
-obj-y  += common/fp5510e2af/
-obj-y  += common/bu6424af/
-obj-y  += common/bu6429af/
-obj-y  += common/bu64748af/
-obj-y  += common/dw9714af/
-obj-y  += common/dw9763af/
-obj-y  += common/dw9814af/
-obj-y  += common/dw9718af/
-obj-y  += common/dw9718saf/
-obj-y  += common/dw9719taf/
-obj-y  += common/lc898212af/
-obj-y  += common/lc898212xdaf/
-obj-y  += common/lc898214af/
-obj-y  += common/lc898217af/
-obj-y  += common/lc898217afa/
-obj-y  += common/lc898217afb/
-obj-y  += common/lc898217afc/
-obj-y  += common/lc898122af/
-obj-y  += common/wv511aaf/
-obj-y  += common/ak7371af/
-ifeq ($(CONFIG_MTK_LENS_BU63165AF_SUPPORT), y)
-  obj-y  += common/bu63165af/
-else
-  obj-y  += common/bu63169af/
-endif
+
+obj-$(CONFIG_MTK_LENS_FM50AF_SUPPORT) += common/fm50af/
+obj-$(CONFIG_MTK_LENS_BU6424AF_SUPPORT) += common/bu6424af/
+obj-$(CONFIG_MTK_LENS_BU6429AF_SUPPORT) += common/bu6429af/
+obj-$(CONFIG_MTK_LENS_DW9714AF_SUPPORT) += common/dw9714af/
+obj-$(CONFIG_MTK_LENS_DW9814AF_SUPPORT) += common/dw9814af/
+obj-$(CONFIG_MTK_LENS_DW9718AF_SUPPORT) += common/dw9718af/
+obj-$(CONFIG_MTK_LENS_DW9718SAF_SUPPORT) += common/dw9718saf/
+obj-$(CONFIG_MTK_LENS_LC898212AF_SUPPORT) += common/lc898212af/
+obj-$(CONFIG_MTK_LENS_LC89821AF_SUPPORT) += common/lc89821af/
+obj-$(CONFIG_MTK_LENS_LC898212XDAF_SUPPORT) += common/lc898212xdaf/
+obj-$(CONFIG_MTK_LENS_LC898212XDAF_TVC700_SUPPORT) += common/lc898212xdaf_tvc700/
+obj-$(CONFIG_MTK_LENS_LC898214AF_SUPPORT) += common/lc898214af/
+obj-$(CONFIG_MTK_LENS_LC898217AF_SUPPORT) += common/lc898217af/
+obj-$(CONFIG_MTK_LENS_LC898217AFA_SUPPORT) += common/lc898217afa/
+obj-$(CONFIG_MTK_LENS_LC898217AFB_SUPPORT) += common/lc898217afb/
+obj-$(CONFIG_MTK_LENS_LC898217AFC_SUPPORT) += common/lc898217afc/
+obj-$(CONFIG_MTK_LENS_LC898122AF_SUPPORT) += common/lc898122af/
+obj-$(CONFIG_MTK_LENS_WV511AAF_SUPPORT) += common/wv511aaf/
+obj-$(CONFIG_MTK_LENS_AK7371AF_SUPPORT) += common/ak7371af/
+
+subdir-ccflags-$(CONFIG_MTK_LENS_FM50AF_SUPPORT) += -DFM50AF
+subdir-ccflags-$(CONFIG_MTK_LENS_BU6424AF_SUPPORT) += -DBU6424AF
+subdir-ccflags-$(CONFIG_MTK_LENS_BU6429AF_SUPPORT) += -DBU6429AF
+subdir-ccflags-$(CONFIG_MTK_LENS_DW9714AF_SUPPORT) += -DDW9714AF
+subdir-ccflags-$(CONFIG_MTK_LENS_DW9814AF_SUPPORT) += -DDW9814AF
+subdir-ccflags-$(CONFIG_MTK_LENS_DW9718AF_SUPPORT) += -DDW9718AF
+subdir-ccflags-$(CONFIG_MTK_LENS_DW9718SAF_SUPPORT) += -DDW9718SAF
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898212AF_SUPPORT) += -DLC898212AF
+subdir-ccflags-$(CONFIG_MTK_LENS_LC89821AF_SUPPORT) += -DLC89821AF
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898212XDAF_SUPPORT) += -DLC898212XDAF
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898212XDAF_TVC700_SUPPORT) += -DLC898212XDAF_TVC700
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898214AF_SUPPORT) += -DLC898214AF
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898217AF_SUPPORT) += -DLC898217AF
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898217AFA_SUPPORT) += -DLC898217AFA
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898217AFB_SUPPORT) += -DLC898217AFB
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898217AFC_SUPPORT) += -DLC898217AFC
+subdir-ccflags-$(CONFIG_MTK_LENS_LC898122AF_SUPPORT) += -DLC898122AF
+subdir-ccflags-$(CONFIG_MTK_LENS_WV511AAF_SUPPORT) += -DWV511AAF
+subdir-ccflags-$(CONFIG_MTK_LENS_AK7371AF_SUPPORT) += -DAK7371AF
 
 endif

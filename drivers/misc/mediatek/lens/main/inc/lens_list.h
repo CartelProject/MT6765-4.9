@@ -173,7 +173,7 @@ extern long DW9719TAF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 extern int DW9719TAF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int DW9719TAF_GetFileName(unsigned char *pFileName);
 
-#if 0
+#if 1
 #define FM50AF_SetI2Cclient FM50AF_SetI2Cclient_Main
 #define FM50AF_Ioctl FM50AF_Ioctl_Main
 #define FM50AF_Release FM50AF_Release_Main
@@ -196,7 +196,14 @@ extern long LC898122AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 			     unsigned long a_u4Param);
 extern int LC898122AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
 extern int LC898122AF_GetFileName(unsigned char *pFileName);
-
+#define LC89821AF_SetI2Cclient LC89821AF_SetI2Cclient_Main
+#define LC89821AF_Ioctl LC89821AF_Ioctl_Main
+#define LC89821AF_Release LC89821AF_Release_Main
+extern int LC89821AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient, spinlock_t *pAF_SpinLock, int *pAF_Opened);
+extern long LC89821AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command, unsigned long a_u4Param);
+extern int LC89821AF_Release(struct inode *a_pstInode, struct file *a_pstFile);
+#define LC89821AF_GetFileName LC89821AF_GetFileName_Main
+extern int LC89821AF_GetFileName(unsigned char *pFileName);
 #define LC898212AF_SetI2Cclient LC898212AF_SetI2Cclient_Main
 #define LC898212AF_Ioctl LC898212AF_Ioctl_Main
 #define LC898212AF_Release LC898212AF_Release_Main

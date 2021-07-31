@@ -12,15 +12,10 @@
  */
 
 /*
- * DW9714AF voice coil motor driver
+ * FM24VS64RAF voice coil motor driver
  *
  *
  */
-#if defined(DW9763_V1_LENS_SUPPORT) //xjl 20181119
-#include "DW9714AF_dw9763_v1.h"
-#elif defined(YK676_CUSTOMER_TRX_S606_HDPLUS) //xjl 20200108
-#include "DW9714AF_TRX_S606.h"        
-#else
 
 #include <linux/delay.h>
 #include <linux/fs.h>
@@ -29,8 +24,19 @@
 
 #include "lens_info.h"
 
-#define AF_DRVNAME "DW9714AF_DRV"
+#define AF_DRVNAME "FM24VS64R_DRV"
 #define AF_I2C_SLAVE_ADDR 0x18
+#define REG_CONTROL 0x02
+#define REG_DAC 0x03
+#define REG_STATUS 0x05
+#define REG_DMC 0x06
+#define REG_TIMING_SCALE 0x07
+#define REG_DAC_TIMING 0x08 
+
+
+
+
+
 
 #define AF_DEBUG
 #ifdef AF_DEBUG
@@ -48,7 +54,8 @@ static unsigned long g_u4AF_INF;
 static unsigned long g_u4AF_MACRO = 1023;
 static unsigned long g_u4CurrPosition;
 
-#if 0
+//这里没有修改
+#if 0 
 static int s4AF_ReadReg(unsigned short *a_pu2Result)
 {
 	int i4RetValue = 0;
@@ -71,18 +78,20 @@ static int s4AF_ReadReg(unsigned short *a_pu2Result)
 }
 #endif
 
+//发送时序 0x18 0x03 dac_h dac_l
 static int s4AF_WriteReg(u16 a_u2Data)
 {
 	int i4RetValue = 0;
 
-	char puSendCmd[2] = {(char)(a_u2Data >> 4),
-			     (char)((a_u2Data & 0xF) << 4)};
+	char puSendCmd[3] = {(char)(REG_DAC),
+											 (char)((a_u2Data >> 8) & 0x03),
+			    						 (char)(a_u2Data & 0xff)};
 
 	g_pstAF_I2Cclient->addr = AF_I2C_SLAVE_ADDR;
 
 	g_pstAF_I2Cclient->addr = g_pstAF_I2Cclient->addr >> 1;
 
-	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 2);
+	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 3);
 
 	if (i4RetValue < 0) {
 		LOG_INF("I2C send failed!!\n");
@@ -118,6 +127,39 @@ static inline int getAFInfo(__user struct stAF_MotorInfo *pstMotorInfo)
 /* initAF include driver initialization and standby mode */
 static int initAF(void)
 {
+	int i4RetValue = 0;
+	//初始化时要发送PD=1 PD = 0
+	char puSendCmd[2] = {(char)(REG_CONTROL),
+			    						 (char)(0x01)};
+
+	g_pstAF_I2Cclient->addr = AF_I2C_SLAVE_ADDR;
+
+	g_pstAF_I2Cclient->addr = g_pstAF_I2Cclient->addr >> 1;
+
+	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 2);
+		if (i4RetValue < 0) {
+		LOG_INF("I2C send failed!!\n");
+		return -1;
+	}
+	//PD = 0
+	puSendCmd[0] = (char)(REG_CONTROL);
+	puSendCmd[1] = (char)(0X00);
+	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 2);
+		if (i4RetValue < 0) {
+		LOG_INF("I2C send failed!!\n");
+		return -1;
+	}
+	
+	//设置DMC1模式
+	puSendCmd[0] = (char)(REG_DMC);
+	puSendCmd[1] = (char)(0X09);
+	i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 2);
+		if (i4RetValue < 0) {
+		LOG_INF("I2C send failed!!\n");
+		return -1;
+	}
+
+	
 	LOG_INF("+\n");
 
 	if (*g_pAF_Opened == 1) {
@@ -126,6 +168,7 @@ static int initAF(void)
 		*g_pAF_Opened = 2;
 		spin_unlock(g_pAF_SpinLock);
 	}
+
 
 	LOG_INF("-\n");
 
@@ -165,7 +208,7 @@ static inline int setAFMacro(unsigned long a_u4Position)
 }
 
 /* ////////////////////////////////////////////////////////////// */
-long DW9714AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
+long FM50AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 		    unsigned long a_u4Param)
 {
 	long i4RetValue = 0;
@@ -202,18 +245,18 @@ long DW9714AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 /* 2.Shut down the device on last close. */
 /* 3.Only called once on last time. */
 /* Q1 : Try release multiple times. */
-int DW9714AF_Release(struct inode *a_pstInode, struct file *a_pstFile)
+int FM50AF_Release(struct inode *a_pstInode, struct file *a_pstFile)
 {
 	LOG_INF("Start\n");
 
 	if (*g_pAF_Opened == 2) {
 		LOG_INF("Wait\n");
-		s4AF_WriteReg(0x80); /* Power down mode */
+		s4AF_WriteReg(0x00); /* Power down mode */
 	}
 
 	if (*g_pAF_Opened) {
 		LOG_INF("Free\n");
-
+		s4AF_WriteReg(0x00); /* Power down mode */
 		spin_lock(g_pAF_SpinLock);
 		*g_pAF_Opened = 0;
 		spin_unlock(g_pAF_SpinLock);
@@ -224,7 +267,7 @@ int DW9714AF_Release(struct inode *a_pstInode, struct file *a_pstFile)
 	return 0;
 }
 
-int DW9714AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient,
+int FM50AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient,
 			  spinlock_t *pAF_SpinLock, int *pAF_Opened)
 {
 	g_pstAF_I2Cclient = pstAF_I2Cclient;
@@ -236,7 +279,7 @@ int DW9714AF_SetI2Cclient(struct i2c_client *pstAF_I2Cclient,
 	return 1;
 }
 
-int DW9714AF_GetFileName(unsigned char *pFileName)
+int FM50AF_GetFileName(unsigned char *pFileName)
 {
 	#if SUPPORT_GETTING_LENS_FOLDER_NAME
 	char FilePath[256];
@@ -253,5 +296,5 @@ int DW9714AF_GetFileName(unsigned char *pFileName)
 	#endif
 	return 1;
 }
-#endif
+
 
