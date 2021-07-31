@@ -106,6 +106,10 @@
 #endif
 #endif
 
+#if defined(CONFIG_TERACUBE_2E)
+#define HIGH_BATTERY_VOLTAGE_SUPPORT
+#endif
+
 #if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
 #include <mt-plat/diso.h>
 #endif

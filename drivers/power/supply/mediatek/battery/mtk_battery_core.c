@@ -782,6 +782,7 @@ void fg_custom_init_from_header(void)
 
 
 #ifdef CONFIG_OF
+#if !defined(YKQ_BATTERY_PROFILE_FROM_HEADER) //added by xen
 static int fg_read_dts_val(const struct device_node *np,
 		const char *node_srting,
 		int *param, int unit)
@@ -1381,6 +1382,7 @@ void fg_custom_init_from_dts(struct platform_device *dev)
 	}
 		}
 
+#endif //YKQ_BATTERY_PROFILE_FROM_HEADER
 #endif	/* end of CONFIG_OF */
 
 
@@ -4115,7 +4117,9 @@ void mtk_battery_init(struct platform_device *dev)
 
 	fg_custom_init_from_header();
 #ifdef CONFIG_OF
+#if !defined(YKQ_BATTERY_PROFILE_FROM_HEADER) //added by xen
 	fg_custom_init_from_dts(dev);
+#endif
 #endif
 
 	gauge_coulomb_service_init();

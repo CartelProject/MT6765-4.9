@@ -295,11 +295,22 @@ signed int battery_meter_get_VSense(void)
 	else
 		return pmic_get_ibus();
 }
-
+#if defined(TPLINK_CHARGING_FLOW)
+extern int temperature;//tplink
+#endif
 void battery_update_psd(struct battery_data *bat_data)
 {
 	bat_data->BAT_batt_vol = battery_get_bat_voltage();
+#if defined(TPLINK_CHARGING_FLOW)
+//zxs for tplink
+        if(temperature!=0)
+           bat_data->BAT_batt_temp =temperature;
+        else
+	   bat_data->BAT_batt_temp = battery_get_bat_temperature();
+//end
+#else
 	bat_data->BAT_batt_temp = battery_get_bat_temperature();
+#endif
 }
 
 static int battery_get_property(struct power_supply *psy,
@@ -1065,6 +1076,9 @@ void battery_debug_init(void)
 		battery_dir, &battery_dump_log_proc_fops);
 }
 
+#if defined(BAT_TEMP_DEBUG)//zxs 20190527
+int bat_temperature_debug = 25;
+#endif
 static ssize_t show_Battery_Temperature(
 	struct device *dev, struct device_attribute *attr,
 					       char *buf)
@@ -1072,7 +1086,11 @@ static ssize_t show_Battery_Temperature(
 	bm_err("%s: %d %d\n",
 		__func__,
 		battery_main.BAT_batt_temp, gm.fixed_bat_tmp);
+#if defined(BAT_TEMP_DEBUG)//zxs 20190527
+       return sprintf(buf, "%d\n", bat_temperature_debug);
+#else
 	return sprintf(buf, "%d\n", gm.fixed_bat_tmp);
+#endif
 }
 
 static ssize_t store_Battery_Temperature(
@@ -1082,7 +1100,9 @@ static ssize_t store_Battery_Temperature(
 	signed int temp;
 
 	if (kstrtoint(buf, 10, &temp) == 0) {
-
+#if defined(BAT_TEMP_DEBUG)//zxs 20190527
+         bat_temperature_debug=temp;
+#else
 		gm.fixed_bat_tmp = temp;
 		if (gm.fixed_bat_tmp == 0xffff)
 			fg_bat_temp_int_internal();
@@ -1100,6 +1120,7 @@ static ssize_t store_Battery_Temperature(
 			__func__,
 			temp, battery_main.BAT_batt_temp);
 		battery_update(&battery_main);
+#endif
 	} else {
 		bm_err("%s: format error!\n", __func__);
 	}
@@ -1190,15 +1211,16 @@ unsigned int TempConverBattThermistor(int temp)
 	int i;
 	unsigned int TBatt_R_Value = 0xffff;
 
-	if (temp >= Fg_Temperature_Table[20].BatteryTemp) {
-		TBatt_R_Value = Fg_Temperature_Table[20].TemperatureR;
+     int Temp_size =24;
+	if (temp >= Fg_Temperature_Table[Temp_size-1].BatteryTemp) { //20
+		TBatt_R_Value = Fg_Temperature_Table[Temp_size-1].TemperatureR;
 	} else if (temp <= Fg_Temperature_Table[0].BatteryTemp) {
 		TBatt_R_Value = Fg_Temperature_Table[0].TemperatureR;
 	} else {
 		RES1 = Fg_Temperature_Table[0].TemperatureR;
 		TMP1 = Fg_Temperature_Table[0].BatteryTemp;
 
-		for (i = 0; i <= 20; i++) {
+		for (i = 0; i <= (Temp_size-1); i++) {
 			if (temp <= Fg_Temperature_Table[i].BatteryTemp) {
 				RES2 = Fg_Temperature_Table[i].TemperatureR;
 				TMP2 = Fg_Temperature_Table[i].BatteryTemp;
@@ -1229,15 +1251,16 @@ int BattThermistorConverTemp(int Res)
 	int RES1 = 0, RES2 = 0;
 	int TBatt_Value = -2000, TMP1 = 0, TMP2 = 0;
 
+     int Temp_size =24;
 	if (Res >= Fg_Temperature_Table[0].TemperatureR) {
-		TBatt_Value = -400;
-	} else if (Res <= Fg_Temperature_Table[20].TemperatureR) {
-		TBatt_Value = 600;
+		TBatt_Value = Fg_Temperature_Table[0].BatteryTemp*10; //-400;
+	} else if (Res <= Fg_Temperature_Table[Temp_size-1].TemperatureR) { // 20
+		TBatt_Value = Fg_Temperature_Table[Temp_size-1].BatteryTemp*10; //600;
 	} else {
 		RES1 = Fg_Temperature_Table[0].TemperatureR;
 		TMP1 = Fg_Temperature_Table[0].BatteryTemp;
 
-		for (i = 0; i <= 20; i++) {
+		for (i = 0; i <= (Temp_size-1); i++) { // 20
 			if (Res >= Fg_Temperature_Table[i].TemperatureR) {
 				RES2 = Fg_Temperature_Table[i].TemperatureR;
 				TMP2 = Fg_Temperature_Table[i].BatteryTemp;
@@ -1416,7 +1439,10 @@ int force_get_tbat_internal(bool update)
 		/* Get V_BAT_Temperature */
 		bat_temperature_volt = 2;
 		bat_temperature_volt = pmic_get_v_bat_temp();
-
+#if defined(TPLINK_CHARGING_FLOW)
+		if(bat_temperature_volt<50)
+			return 0;
+#endif			
 		if (bat_temperature_volt != 0) {
 			fg_r_value = fg_cust_data.com_r_fg_value;
 			if (gm.no_bat_temp_compensate == 0)
@@ -1591,8 +1617,11 @@ int force_get_tbat(bool update)
 	gm.ntc_disable_nafg = false;
 	bm_debug("[%s] t:%d precise:%d\n", __func__,
 		bat_temperature_val, gm.tbat_precise);
-
-	return bat_temperature_val;
+#if defined(BAT_TEMP_DEBUG)//zxs 20190527
+        return bat_temperature_debug;
+#else
+         return bat_temperature_val;
+#endif
 #endif
 }
 
@@ -3449,6 +3478,60 @@ static ssize_t store_Power_On_Voltage(
 static DEVICE_ATTR(
 	Power_On_Voltage, 0664, show_Power_On_Voltage, store_Power_On_Voltage);
 
+#if defined(TPLINK_CHARGING_FLOW)
+///////////////////////////
+//zxs 20190531
+extern bool aging_test_mode; 
+extern bool aging_test_stop_charging;
+static ssize_t show_aging_test_mode(
+struct device *dev, struct device_attribute *attr, char *buf)
+{
+
+	return sprintf(buf, "%u\n", aging_test_mode);
+}
+
+static ssize_t store_aging_test_mode(
+	struct device *dev, struct device_attribute *attr,
+				      const char *buf, size_t size)
+{
+	signed int temp;
+
+	if (kstrtoint(buf, 10, &temp) == 0) {
+		if (temp == 0){
+			aging_test_mode = false;
+                       }
+		else{
+			aging_test_mode= true;
+                    }
+         aging_test_stop_charging=0;
+	} else {
+		bm_err("store_aging_test_mode: format error!\n");
+	}
+	return size;
+}
+
+static DEVICE_ATTR(
+	aging_test_mode, 0664, show_aging_test_mode, store_aging_test_mode);
+
+//zxs 20190627
+extern int pmic_get_v_bat_temp(void);
+static ssize_t show_ntc_status(
+struct device *dev, struct device_attribute *attr, char *buf)
+{
+        bool is_ntc_fail=0;
+      
+        if(pmic_get_v_bat_temp()<50)
+           is_ntc_fail=1;
+
+	return sprintf(buf, "%u\n", is_ntc_fail);
+}
+
+
+
+static DEVICE_ATTR(
+	ntc_status, 0664, show_ntc_status, NULL);
+//end
+#endif
 /* /////////////////////////////////////////// */
 /* // Create File For EM : Power_Off_Voltage */
 /* /////////////////////////////////////////// */
@@ -3474,6 +3557,21 @@ static DEVICE_ATTR(
 	Power_Off_Voltage, 0664,
 	show_Power_Off_Voltage, store_Power_Off_Voltage);
 
+//xjl 20191210 add
+extern int pmic_get_charging_current(void);
+	
+static ssize_t show_Charging_Current(
+struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret_value = 0;
+    ret_value=pmic_get_charging_current();
+	return sprintf(buf, "%u\n", ret_value);
+}
+
+
+static DEVICE_ATTR(
+	Charging_Current, 0664, show_Charging_Current, NULL);
+//xjl 20191210 end
 
 static int battery_callback(
 	struct notifier_block *nb, unsigned long event, void *v)
@@ -3952,12 +4050,21 @@ static int __init battery_probe(struct platform_device *dev)
 		&dev_attr_Power_On_Voltage);
 	ret_device_file = device_create_file(&(dev->dev),
 		&dev_attr_Power_Off_Voltage);
+//xjl 20191210 add		
+	ret_device_file = device_create_file(&(dev->dev),
+		&dev_attr_Charging_Current);
 	ret_device_file = device_create_file(&(dev->dev),
 		&dev_attr_shutdown_condition_enable);
 	ret_device_file = device_create_file(&(dev->dev),
 		&dev_attr_reset_battery_cycle);
 	ret_device_file = device_create_file(&(dev->dev),
 		&dev_attr_reset_aging_factor);
+#if defined(TPLINK_CHARGING_FLOW)
+        ret_device_file = device_create_file(&(dev->dev),
+		&dev_attr_aging_test_mode);//tplink
+        ret_device_file = device_create_file(&(dev->dev),
+		&dev_attr_ntc_status);//tplink
+#endif		
 
 	if (of_scan_flat_dt(fb_early_init_dt_get_chosen, NULL) > 0)
 		fg_swocv_v =

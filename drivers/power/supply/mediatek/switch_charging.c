@@ -40,6 +40,9 @@
 #define STATUS_UNSUPPORTED    -1
 #define STATUS_FAIL -2
 
+#if defined(CONFIG_TERACUBE_2E)
+#define HIGH_BATTERY_VOLTAGE_SUPPORT
+#endif
 
 /* ============================================================ // */
 /* global variable */

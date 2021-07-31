@@ -143,3 +143,12 @@ config MTK_BQ25890_SUPPORT
 	  It also supports BC1.2 function.
 	  It depends on config MTK_CHARGER.
 	  Say yes to enable BQ25890 charger driver.
+
+config CHARGER_ETA6937
+	bool "Charger driver for ETA6937 charger IC"
+	default n
+	depends on MTK_CHARGER
+	help
+	  This is to enable support for ETA6937 IC.
+	  It depends on config MTK_CHARGER.
+	  Say yes to enable ETA6937 charger driver.

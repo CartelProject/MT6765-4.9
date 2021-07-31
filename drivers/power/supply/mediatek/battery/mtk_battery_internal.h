@@ -51,7 +51,15 @@
 #define SHUTDOWN_TIME 40
 #define AVGVBAT_ARRAY_SIZE 30
 #define INIT_VOLTAGE 3450
+#if defined(HX_HIGH_TEMPERATURE_TEST)
+#define BATTERY_SHUTDOWN_TEMPERATURE 99
+#elif defined(TPLINK_CHARGING_FLOW)
+#define BATTERY_SHUTDOWN_TEMPERATURE 65
+#elif defined(CONFIG_TERACUBE_2E)
+#define BATTERY_SHUTDOWN_TEMPERATURE 90
+#else
 #define BATTERY_SHUTDOWN_TEMPERATURE 60
+#endif
 
 /* ============================================================ */
 /* typedef and Struct*/

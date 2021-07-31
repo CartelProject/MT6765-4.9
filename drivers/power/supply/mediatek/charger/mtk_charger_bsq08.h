@@ -30,9 +30,6 @@
  * Wy Chuang
  *
  */
-#if defined(TPLINK_CHARGING_FLOW)
-#include "mtk_charger_bsq08.h"
-#else 
 #include <linux/init.h>		/* For init/exit macros */
 #include <linux/module.h>	/* For MODULE_ marcros  */
 #include <linux/fs.h>
@@ -81,16 +78,36 @@ static struct charger_manager *pinfo;
 static struct list_head consumer_head = LIST_HEAD_INIT(consumer_head);
 static DEFINE_MUTEX(consumer_mutex);
 
-#if defined(CONFIG_TERACUBE_2E)
-bool chr_current_limi=0;
-#endif
 
+//tplink start
+/*static*/ int temperature=0;
+static int temp_count=0;
+static int temp_sum[29]={0};
+static bool is_need_avg=0;
+static int keep_notify=0;
+static int last_temp_rang=0;
+//static int last_temp_rang2=0;
+static int current_temp_rang=2;
+//bool exhibition_mode=0;
+bool aging_test_mode=0;
+//bool exhibition_stop_charging=0;
+bool aging_test_stop_charging=0;
+static bool tplinklog_enable=0;
+//extern bool enable_sw_safety_timer;
+bool first_time_charging=0;
+
+//#define EXHIBITION_MODE_SUPPORT
+//#define TPLINKLOG_PRINT_ENABLE
+
+//end
+
+#define USE_FG_TIMER 0 //zxs 20190428 for tplink
 bool is_power_path_supported(void)
 {
 	if (pinfo == NULL)
 		return false;
 		//cjc add 
-#if defined(CONFIG_MTK_FAN5405_SUPPORT) || defined(CONFIG_MTK_ETA6937_SUPPORT)
+#ifdef CONFIG_MTK_FAN5405_SUPPORT
 	return false;
 #endif
 	if (pinfo->data.power_path_support == true)
@@ -1194,6 +1211,11 @@ void mtk_charger_int_handler(void)
 	_wake_up_charger(pinfo);
 }
 
+#if defined(CHIPONE_TP_CHARGER_DETCT) //zxs 20191120
+extern int cts_charger_plugin2(void);
+extern int cts_charger_plugout2(void);
+extern bool tp_probe_done;
+#endif
 static int mtk_charger_plug_in(struct charger_manager *info,
 				enum charger_type chr_type)
 {
@@ -1201,9 +1223,12 @@ static int mtk_charger_plug_in(struct charger_manager *info,
 	info->charger_thread_polling = true;
 
 	info->can_charging = true;
-	info->enable_dynamic_cv = true;
+	info->enable_dynamic_cv = false;//tplink //true;
 	info->safety_timeout = false;
 	info->vbusov_stat = false;
+        first_time_charging=true;
+       // if(exhibition_mode) //tplink
+         //  enable_sw_safety_timer=true;
 
 	chr_err("mtk_is_charger_on plug in, type:%d\n", chr_type);
 	if (info->plug_in != NULL)
@@ -1212,12 +1237,14 @@ static int mtk_charger_plug_in(struct charger_manager *info,
 	charger_dev_set_input_current(info->chg1_dev,
 				info->chg1_data.input_current_limit);
 	charger_dev_plug_in(info->chg1_dev);
+#if defined(CHIPONE_TP_CHARGER_DETCT) //zxs 20191120	
+      if(tp_probe_done)
+	 cts_charger_plugin2();
+#endif
 	return 0;
 }
 
-#if defined(CONFIG_TERACUBE_2E) //xjl 20200527
-extern int yk_wireless_charge_flag;
-#endif
+extern void set_gpio_charge_en(int enable);//zxs 20190606
 static int mtk_charger_plug_out(struct charger_manager *info)
 {
 	struct charger_data *pdata1 = &info->chg1_data;
@@ -1231,20 +1258,27 @@ static int mtk_charger_plug_out(struct charger_manager *info)
 	pdata1->input_current_limit_by_aicl = -1;
 	pdata2->disable_charging_count = 0;
 
-#if defined(CONFIG_TERACUBE_2E)
-        chr_current_limi=0;
-#endif
-
-#if defined(CONFIG_TERACUBE_2E) //xjl 20200527
-	yk_wireless_charge_flag = 0;
-#endif
-
+//tplink
+        last_temp_rang=0;
+        //is_need_avg=0;
+        //temp_count=0;
+        //exhibition_stop_charging=0;
+       // last_temp_rang2=0;
+        aging_test_stop_charging=0;
+        first_time_charging=false;
+        set_gpio_charge_en(1);//zxs 20190606
+        info->notify_code &= ~(0x0001);
+//end
 	if (info->plug_out != NULL)
 		info->plug_out(info);
 
 	charger_dev_set_input_current(info->chg1_dev, 100000);
 	charger_dev_set_mivr(info->chg1_dev, info->data.min_charger_voltage);
 	charger_dev_plug_out(info->chg1_dev);
+#if defined(CHIPONE_TP_CHARGER_DETCT) //zxs 20191120
+    if(tp_probe_done)
+	cts_charger_plugout2();
+#endif	
 	return 0;
 }
 
@@ -1283,7 +1317,67 @@ static bool mtk_is_charger_on(struct charger_manager *info)
 
 static void charger_update_data(struct charger_manager *info)
 {
+        int i; //tplink
 	info->battery_temp = battery_get_bat_temperature();
+//tplink
+        if(is_need_avg==0)
+         {
+            temperature=info->battery_temp;
+            if(temp_count<29)
+             {temp_sum[temp_count]=info->battery_temp;
+#if defined(TPLINKLOG_PRINT_ENABLE)
+              printk("[Vbat=],temp_sum[%d]=%d\n",temp_count,temp_sum[temp_count]);
+#endif
+              temp_count++;
+             }
+             else
+             {
+              is_need_avg=1;
+              temperature=0;
+              for(i=0;i<29;i++)
+              {
+               temperature+=temp_sum[i];
+#if defined(TPLINKLOG_PRINT_ENABLE)
+               printk("[Vbat=],temp_sum[%d]=%d\n",i,temp_sum[i]);
+#endif
+              }
+             temperature+=info->battery_temp;
+             temperature=temperature/30;
+#if defined(TPLINKLOG_PRINT_ENABLE)
+              printk("[Vbat=],info->battery_temp=%d,temprature=%d\n",info->battery_temp,temperature);
+#endif
+              for(i=0;i<28;i++)
+              {
+               temp_sum[i]=temp_sum[i+1];
+              }
+              temp_sum[28]=info->battery_temp;
+             }
+         }
+        else{
+             temperature=0;
+              for(i=0;i<29;i++)
+              {
+               temperature+=temp_sum[i];
+#if defined(TPLINKLOG_PRINT_ENABLE)
+               printk("[Vbat=],temp_sum[%d]=%d\n",i,temp_sum[i]);
+#endif
+              }
+             temperature+=info->battery_temp;
+             temperature=temperature/30;
+#if defined(TPLINKLOG_PRINT_ENABLE)
+             printk("[Vbat=],info->battery_temp=%d,temprature=%d\n",info->battery_temp,temperature);
+#endif
+              
+              for(i=0;i<28;i++)
+              {
+               temp_sum[i]=temp_sum[i+1];
+              }
+              temp_sum[28]=info->battery_temp;
+         }
+#if defined(BAT_TEMP_DEBUG)//zxs 20190527
+    temperature=battery_get_bat_temperature();
+#endif   
+//end
 }
 
 static int mtk_chgstat_notify(struct charger_manager *info)
@@ -1331,6 +1425,44 @@ static void mtk_battery_notify_VCharger_check(struct charger_manager *info)
 #endif
 }
 
+#if 1 //tplink
+static void mtk_battery_notify_VBatTemp_check(struct charger_manager *info)
+{
+  if(temperature >58)
+        {
+		info->notify_code = 0x2000;
+		chr_err("[BATTERY] bat_temp(%d) out of range(too high)\n",
+			temperature);
+	}
+	else if (temperature >= info->thermal.max_charge_temp) {
+		info->notify_code = 0x0002;
+		chr_err("[BATTERY] bat_temp(%d) out of range(too high)\n",
+			temperature);
+	}
+        else {
+
+		if ((temperature < info->thermal.min_charge_temp)&&(temperature>-18)) 
+                {
+			info->notify_code = 0x0020;
+			chr_err("bat_temp(%d) out of range(too low)\n",
+				temperature);
+		}
+                else if ((temperature <=-18)&&(temperature>-20)) 
+                {
+			info->notify_code = 0x4000;
+			chr_err("bat_temp(%d) out of range(too low)\n",
+				temperature);
+		}
+                else if (temperature <=-20)
+                {
+			info->notify_code = 0x8000;
+			chr_err("bat_temp(%d) out of range(too low)\n",
+				temperature);
+		}
+
+	}
+}
+#else
 static void mtk_battery_notify_VBatTemp_check(struct charger_manager *info)
 {
 #if defined(BATTERY_NOTIFY_CASE_0002_VBATTEMP)
@@ -1366,6 +1498,7 @@ static void mtk_battery_notify_VBatTemp_check(struct charger_manager *info)
 	}
 #endif
 }
+#endif
 
 static void mtk_battery_notify_UI_test(struct charger_manager *info)
 {
@@ -1499,25 +1632,20 @@ static void mtk_chg_get_tchg(struct charger_manager *info)
 	}
 }
 
-#if defined(CONFIG_TERACUBE_2E)
-#if defined(CONFIG_MTK_FAN5405_SUPPORT)
-extern void fan5405_set_iocharge(unsigned int val);
-#endif
-#if defined(CONFIG_MTK_ETA6937_SUPPORT)
-extern void eta6937_set_iocharge(unsigned int val);
-#endif
-#endif
-unsigned int yk_stop_percent=100;
+extern void fan5405_set_oreg(unsigned int val);//tplink
+extern void fan5405_set_iocharge(unsigned int val);//tplink
+extern void fan5405_set_input_charging_current(unsigned int val);
 static void charger_check_status(struct charger_manager *info)
 {
 	bool charging = true;
-	int temperature;
+	//int temperature;//tplink
+        int bat_soc=0;//tplink
 	struct battery_thermal_protection_data *thermal;
 
 	if (mt_get_charger_type() == CHARGER_UNKNOWN)
 		return;
 
-	temperature = info->battery_temp;
+	//temperature = info->battery_temp;//tplink
 	thermal = &info->thermal;
 
 	if (info->enable_sw_jeita == true) {
@@ -1528,8 +1656,9 @@ static void charger_check_status(struct charger_manager *info)
 		}
 	} else {
 
+              // if(bat_temp_protect==0){ //tplink
 		if (thermal->enable_min_charge_temp) {
-			if (temperature < thermal->min_charge_temp) {
+			if (temperature <= thermal->min_charge_temp) {
 				chr_err("Battery Under Temperature or NTC fail %d %d\n",
 					temperature, thermal->min_charge_temp);
 				thermal->sm = BAT_TEMP_LOW;
@@ -1543,6 +1672,9 @@ static void charger_check_status(struct charger_manager *info)
 					temperature,
 					thermal->min_charge_temp_plus_x_degree);
 					thermal->sm = BAT_TEMP_NORMAL;
+                                        info->notify_code = 0x1000;//tplink
+                                        last_temp_rang=0;//tplink
+                                        //last_temp_rang2=0;
 				} else {
 					charging = false;
 					goto stop_charging;
@@ -1558,20 +1690,131 @@ static void charger_check_status(struct charger_manager *info)
 			goto stop_charging;
 		} else if (thermal->sm == BAT_TEMP_HIGH) {
 			if (temperature
-			    < thermal->max_charge_temp_minus_x_degree) {
+			    <= thermal->max_charge_temp_minus_x_degree) {
 				chr_err("Battery Temperature raise from %d to %d(%d), allow charging!!\n",
 				thermal->max_charge_temp,
 				temperature,
 				thermal->max_charge_temp_minus_x_degree);
 				thermal->sm = BAT_TEMP_NORMAL;
+                                info->notify_code = 0x1000;//tplink
+                                last_temp_rang=0;//tplink
+                                //last_temp_rang2=0;
 			} else {
 				charging = false;
 				goto stop_charging;
 			}
 		}
-	}
+           // }
+             printk("[Vbat],bat_voltage=%d\n",battery_get_bat_voltage());
 
-	mtk_chg_get_tchg(info);
+if(aging_test_mode==1) //aging test mode
+{
+   bat_soc=battery_get_soc();
+   if(aging_test_stop_charging==0)
+   {
+     if(bat_soc>=70)
+      { 
+       aging_test_stop_charging=1;
+       charging = false;
+       goto stop_charging;
+      }
+   }
+   else{
+      if(bat_soc>=65)
+      { 
+       aging_test_stop_charging=1;
+       charging = false;
+       goto stop_charging;
+      }
+     else
+     {
+      aging_test_stop_charging=0;
+     }
+   }
+}
+else
+{         
+             //last_temp_rang2=0;
+             if((temperature>=45)&&(temperature<55))
+              { 
+                current_temp_rang=1;
+                goto set_charger;
+                //fan5405_set_oreg(35);//4.2
+                //fan5405_set_iocharge(1);
+              }
+             else if(last_temp_rang==1)
+              {
+                  if(temperature>40)
+                   {
+                    current_temp_rang=1;
+                    goto set_charger;
+                   }
+              }
+             
+
+             
+             if((temperature>10)&&(temperature<45))
+             {
+              if(last_temp_rang==3)
+              {
+                  if(temperature>=12)
+                   {
+                     current_temp_rang=2;
+                     goto set_charger;
+                   }
+                  else
+                  {  
+                   current_temp_rang=3;
+                   goto set_charger;
+                  }
+              }
+               current_temp_rang=2;
+                goto set_charger;
+               //fan5405_set_oreg(47); //4.4
+               //fan5405_set_iocharge(4);
+             }
+
+ 
+            if((temperature>0)&&(temperature<=10))
+            {
+               current_temp_rang=3;
+               //fan5405_set_oreg(40); //4.3
+               //fan5405_set_iocharge(1);
+            }
+          // }
+set_charger: //zxs 20190620
+#if defined(TPLINKLOG_PRINT_ENABLE)
+            printk("[Vbat],last_temp_rang=%d,current_temp_rang=%d\n",last_temp_rang,current_temp_rang);
+#endif      
+
+
+            if(last_temp_rang!=current_temp_rang)
+            {
+              switch(current_temp_rang)
+              {
+               case 1:
+                 //fan5405_set_oreg(35);//4.2
+                 fan5405_set_oreg(47); //4.4
+                 fan5405_set_iocharge(1);
+               break;
+               case 2:
+                 fan5405_set_oreg(47); //4.4
+                 fan5405_set_iocharge(7);//4
+               break;
+               case 3:
+                 fan5405_set_oreg(40); //4.3
+                 fan5405_set_iocharge(1);
+               break;
+               default:
+               break;
+              }
+               last_temp_rang=current_temp_rang;
+            }
+            }
+	
+}
+//end
+        mtk_chg_get_tchg(info);
 
 	if (!mtk_chg_check_vbus(info)) {
 		charging = false;
@@ -1580,48 +1823,33 @@ static void charger_check_status(struct charger_manager *info)
 
 	if (info->cmd_discharging)
 		charging = false;
-	if (info->safety_timeout)
-		charging = false;
+	//if (info->safety_timeout)
+		//charging = false;
 	if (info->vbusov_stat)
 		charging = false;
-
-#if defined(CONFIG_TERACUBE_2E)
-	if((battery_get_uisoc() >= yk_stop_percent)&&(yk_stop_percent < 100))//todo 100% not stop
-	{
-		printk("trx eta6937,battery_get_uisoc >= %d\n",yk_stop_percent);
-		charging = false;
-		goto stop_charging;
-	}
-
-	if(temperature <= 15)
-	{
-	    	chr_current_limi=1;
-
-#if defined(CONFIG_MTK_ETA6937_SUPPORT)
-            	printk("trx eta6937,temperatur=%d\n",temperature);
-     		eta6937_set_iocharge(0);
-#endif
-
-#if defined(CONFIG_MTK_FAN5405_SUPPORT)
-            	printk("trx fan5405,temperatur=%d\n",temperature);
-     		fan5405_set_iocharge(0);
-#endif
-		goto stop_charging;
-	}
-else if((temperature > 45) && (battery_get_bat_voltage() > 4100))
-	{
-		charging = false;
-		goto stop_charging;
-	}
-	else
-	{
-           chr_current_limi=0;
-	}
-#endif
-
+      //if(pmic_get_charging_current()<=100)
+        //       charging = false;
+     if((mt_get_charger_type()==STANDARD_HOST)||(mt_get_charger_type()==CHARGING_HOST))
+          fan5405_set_input_charging_current(1);
+     else
+          fan5405_set_input_charging_current(3);
+    
+       
 stop_charging:
-	mtk_battery_notify_check(info);
-
+//tplink
+        if(info->notify_code == 0x1000)   
+         {
+         if(keep_notify<=5)
+           keep_notify++;
+         else
+          {
+           keep_notify=0;
+	   mtk_battery_notify_check(info);
+          }
+         }
+        else
+           mtk_battery_notify_check(info);
+//end
 	chr_err("tmp:%d (jeita:%d sm:%d cv:%d en:%d) (sm:%d) en:%d c:%d s:%d ov:%d %d %d\n",
 		temperature, info->enable_sw_jeita, info->sw_jeita.sm,
 		info->sw_jeita.cv, info->sw_jeita.charging, thermal->sm,
@@ -1655,7 +1883,7 @@ static void kpoc_power_off_check(struct charger_manager *info)
 	}
 }
 
-#ifdef CONFIG_PM
+#if 0//def CONFIG_PM
 static int charger_pm_event(struct notifier_block *notifier,
 			unsigned long pm_event, void *unused)
 {
@@ -1702,6 +1930,7 @@ static enum alarmtimer_restart
 
 	if (info->is_suspend == false) {
 		chr_err("%s: not suspend, wake up charger\n", __func__);
+		 //tplinklog_enable=1;//zxs 20190507 //xjl 20200330 for current high
 		_wake_up_charger(info);
 	} else {
 		chr_err("%s: alarm timer timeout\n", __func__);
@@ -1725,7 +1954,7 @@ static void mtk_charger_start_timer(struct charger_manager *info)
 	}
 
 	get_monotonic_boottime(&time_now);
-	time.tv_sec = info->polling_interval;
+	time.tv_sec = 10,//info->polling_interval;
 	time.tv_nsec = 0;
 	info->endtime = timespec_add(time_now, time);
 
@@ -1742,7 +1971,7 @@ static void mtk_charger_init_timer(struct charger_manager *info)
 			mtk_charger_alarm_timer_func);
 	mtk_charger_start_timer(info);
 
-#ifdef CONFIG_PM
+#if 0 //zxs//#ifdef CONFIG_PM
 	if (register_pm_notifier(&charger_pm_notifier_func))
 		chr_err("%s: register pm failed\n", __func__);
 #endif /* CONFIG_PM */
@@ -1768,14 +1997,19 @@ static int charger_routine_thread(void *arg)
 		info->charger_thread_timeout = false;
 		bat_current = battery_get_bat_current();
 		chg_current = pmic_get_charging_current();
-		chr_err("Vbat=%d,Ibat=%d,I=%d,VChr=%d,T=%d,Soc=%d:%d,CT:%d:%d hv:%d pd:%d:%d\n",
+               if(tplinklog_enable==1){ //zxs 20190507
+#if 1//defined(TPLINKLOG_PRINT_ENABLE)
+		chr_err("HTCLOG Vbat=%d,Ibat=%d,I=%d,VChr=%d,T=%d,Soc=%d:%d,CT:%d:%d hv:%d pd:%d:%d\n",
 			battery_get_bat_voltage(), bat_current, chg_current,
-			battery_get_vbus(), battery_get_bat_temperature(),
+			battery_get_vbus(), temperature,//tplink /*battery_get_bat_temperature(),*/
 			battery_get_soc(), battery_get_uisoc(),
 			mt_get_charger_type(), info->chr_type,
 			info->enable_hv_charging, info->pd_type,
 			info->pd_reset);
-
+#endif
+                tplinklog_enable=0;
+                mtk_charger_start_timer(info);//zxs 20190507
+               }
 		if (info->pd_reset == true) {
 			mtk_pe40_plugout_reset(info);
 			info->pd_reset = false;
@@ -1783,12 +2017,14 @@ static int charger_routine_thread(void *arg)
 
 		is_charger_on = mtk_is_charger_on(info);
 
-		if (info->charger_thread_polling == true)
-			mtk_charger_start_timer(info);
+		//if (info->charger_thread_polling == true) //xjl 20190415 for tplink battery log
+			//mtk_charger_start_timer(info);//zxs 20190507
 
 		charger_update_data(info);
+		
 		check_battery_exist(info);
 		check_dynamic_mivr(info);
+		if (info->charger_thread_polling == true) //zxs for tplink
 		charger_check_status(info);
 		kpoc_power_off_check(info);
 
@@ -2210,11 +2446,7 @@ static int mtk_charger_parse_dt(struct charger_manager *info,
 #endif
 //==============================
 	/* PE */
-#if defined(CONFIG_TERACUBE_2E)
-     info->data.ta_12v_support =0;
-#else
 	info->data.ta_12v_support = of_property_read_bool(np, "ta_12v_support");
-#endif
 	info->data.ta_9v_support = of_property_read_bool(np, "ta_9v_support");
 
 	if (of_property_read_u32(np, "pe_ichg_level_threshold", &val) >= 0)
@@ -2541,13 +2773,15 @@ static int mtk_charger_parse_dt(struct charger_manager *info,
 	chr_debug("%s: power_path_support: %d\n",
 		__func__, info->data.power_path_support);
 
-	if (of_property_read_u32(np, "max_charging_time", &val) >= 0)
+	/*if (of_property_read_u32(np, "max_charging_time", &val) >= 0)
 		info->data.max_charging_time = val;
 	else {
 		chr_err("use default MAX_CHARGING_TIME:%d\n",
 			MAX_CHARGING_TIME);
 		info->data.max_charging_time = MAX_CHARGING_TIME;
-	}
+	}*/ //tplink
+       info->data.max_charging_time = MAX_CHARGING_TIME;
+	
 
 	if (of_property_read_u32(np, "bc12_charger", &val) >= 0)
 		info->data.bc12_charger = val;
@@ -3226,7 +3460,7 @@ static int mtk_charger_probe(struct platform_device *pdev)
 	/* init thread */
 	init_waitqueue_head(&info->wait_que);
 	info->polling_interval = CHARGING_INTERVAL;
-	info->enable_dynamic_cv = true;
+	info->enable_dynamic_cv =false;//tplink // true;
 
 	info->chg1_data.thermal_charging_current_limit = -1;
 	info->chg1_data.thermal_input_current_limit = -1;
@@ -3359,4 +3593,3 @@ module_exit(mtk_charger_exit);
 MODULE_AUTHOR("wy.chuang <wy.chuang@mediatek.com>");
 MODULE_DESCRIPTION("MTK Charger Driver");
 MODULE_LICENSE("GPL");
-#endif

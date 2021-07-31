@@ -87,6 +87,10 @@ do {								\
 #define CHG_BAT_LT_STATUS	(1 << 5)
 #define CHG_TYPEC_WD_STATUS	(1 << 6)
 
+#if defined(CONFIG_TERACUBE_2E)
+#define HIGH_BATTERY_VOLTAGE_SUPPORT
+#endif
+
 /* charger_algorithm notify charger_dev */
 enum {
 	EVENT_EOC,

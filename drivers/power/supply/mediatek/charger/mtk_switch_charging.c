@@ -99,6 +99,9 @@ static void _disable_all_charging(struct charger_manager *info)
 		mtk_pdc_reset(info);
 }
 
+#if defined(CONFIG_TERACUBE_2E) //xjl 20200527
+int yk_wireless_charge_flag = 0;
+#endif
 static void swchg_select_charging_current_limit(struct charger_manager *info)
 {
 	struct charger_data *pdata;
@@ -230,10 +233,49 @@ static void swchg_select_charging_current_limit(struct charger_manager *info)
 					info->data.usb_charger_current;
 		}
 	} else if (info->chr_type == NONSTANDARD_CHARGER) {
+#if defined(CONFIG_TERACUBE_2E) //xjl 20200527
+		printk("xjl swchg_select_charging_current_limit NONSTANDARD_CHARGER");
+		yk_wireless_charge_flag++;
+		if(info->battery_temp > 45)
+		{
+			yk_wireless_charge_flag=2;
+		}
+
+		switch(yk_wireless_charge_flag)
+		{
+			case 1:
+			    printk("xjl charger_check_status NONSTANDARD_CHARGER I=400");
+			    pdata->input_current_limit = 400000; //info->data.non_std_ac_charger_current;
+			    pdata->charging_current_limit = 400000; //info->data.non_std_ac_charger_current;
+			    break;
+
+			case 2:
+			    printk("xjl charger_check_status NONSTANDARD_CHARGER I=850");
+			    pdata->input_current_limit = 850000;
+			    pdata->charging_current_limit = 850000;
+			    break;
+
+			case 3:
+			    printk("xjl charger_check_status NONSTANDARD_CHARGER I=1200");
+			    pdata->input_current_limit = 1200000;
+			    pdata->charging_current_limit = 1200000;
+			    break;
+			case 4:
+			    printk("xjl charger_check_status NONSTANDARD_CHARGER I=1600"); 
+			    pdata->input_current_limit = 1600000;
+			    pdata->charging_current_limit = 1600000;
+			    break;	
+		
+			default:
+                yk_wireless_charge_flag=5;
+			    break;
+		}
+#else
 		pdata->input_current_limit =
 				info->data.non_std_ac_charger_current;
 		pdata->charging_current_limit =
 				info->data.non_std_ac_charger_current;
+#endif
 	} else if (info->chr_type == STANDARD_CHARGER) {
 		pdata->input_current_limit =
 				info->data.ac_charger_input_current;
