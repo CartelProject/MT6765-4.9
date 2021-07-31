@@ -71,12 +71,15 @@ static void handle_query_cap_ack_msg(struct vdec_vcu_ipi_query_cap_ack *msg)
 inline int get_mapped_fd(struct dma_buf *dmabuf)
 {
 	int target_fd = 0;
+
 #ifndef CONFIG_MTK_IOMMU_V2
 	unsigned long rlim_cur;
 	unsigned long irqs;
 	struct task_struct *task = NULL;
 	struct files_struct *f = NULL;
-	unsigned long flags = 0;
+	struct sighand_struct *sighand;
+	spinlock_t      siglock;
+	struct fdtable fdt;
 
 	if (dmabuf == NULL || dmabuf->file == NULL)
 		return 0;
@@ -84,53 +87,40 @@ inline int get_mapped_fd(struct dma_buf *dmabuf)
 	vcu_get_file_lock();
 
 	vcu_get_task(&task, &f, 0);
-	if (task == NULL || f == NULL) {
+	if (task == NULL || f == NULL ||
+		probe_kernel_address(&task->sighand, sighand) ||
+		probe_kernel_address(&task->sighand->siglock, siglock)) {
 		vcu_put_file_lock();
 		return -EMFILE;
 	}
 
-	if (vcu_get_sig_lock(&flags) <= 0) {
-		pr_info("%s() Failed to try lock...VPUD may die", __func__);
+	spin_lock(&f->file_lock);
+	if (probe_kernel_address(files_fdtable(f), fdt)) {
+		spin_unlock(&f->file_lock);
 		vcu_put_file_lock();
 		return -EMFILE;
 	}
-
-	if (vcu_check_vpud_alive() == 0) {
-		pr_info("%s() Failed to check vpud alive. VPUD died", __func__);
-		vcu_put_file_lock();
-		vcu_put_sig_lock(flags);
-		return -EMFILE;
-	}
-	vcu_put_sig_lock(flags);
+	spin_unlock(&f->file_lock);
 
 	if (!lock_task_sighand(task, &irqs)) {
 		vcu_put_file_lock();
 		return -EMFILE;
 	}
 
-	// get max number of open files
 	rlim_cur = task_rlimit(task, RLIMIT_NOFILE);
 	unlock_task_sighand(task, &irqs);
-
-	f = get_files_struct(task);
-	if (!f) {
-		vcu_put_file_lock();
-		return -EMFILE;
-	}
 
 	target_fd = __alloc_fd(f, 0, rlim_cur, O_CLOEXEC);
 
 	get_file(dmabuf->file);
 
 	if (target_fd < 0) {
-		put_files_struct(f);
 		vcu_put_file_lock();
 		return -EMFILE;
 	}
 
 	__fd_install(f, target_fd, dmabuf->file);
 
-	put_files_struct(f);
 	vcu_put_file_lock();
 
 	/* pr_info("get_mapped_fd: %d", target_fd); */
@@ -143,39 +133,14 @@ inline void close_mapped_fd(unsigned int target_fd)
 #ifndef CONFIG_MTK_IOMMU_V2
 	struct task_struct *task = NULL;
 	struct files_struct *f = NULL;
-	unsigned long flags = 0;
 
 	vcu_get_file_lock();
 	vcu_get_task(&task, &f, 0);
-	if (task == NULL || f == NULL) {
-		vcu_put_file_lock();
+	vcu_put_file_lock();
+	if (task == NULL || f == NULL)
 		return;
-	}
-
-	if (vcu_get_sig_lock(&flags) <= 0) {
-		pr_info("%s() Failed to try lock...VPUD may die", __func__);
-		vcu_put_file_lock();
-		return;
-	}
-
-	if (vcu_check_vpud_alive() == 0) {
-		pr_info("%s() Failed to check vpud alive. VPUD died", __func__);
-		vcu_put_file_lock();
-		vcu_put_sig_lock(flags);
-		return;
-	}
-	vcu_put_sig_lock(flags);
-
-	f = get_files_struct(task);
-	if (!f) {
-		vcu_put_file_lock();
-		return;
-	}
 
 	__close_fd(f, target_fd);
-
-	put_files_struct(f);
-	vcu_put_file_lock();
 #endif
 }
 
@@ -204,11 +169,6 @@ int vcu_dec_ipi_handler(void *data, unsigned int len, void *priv)
 
 	vcu = (struct vdec_vcu_inst *)(unsigned long)msg->ap_inst_addr;
 	mtk_vcodec_debug(vcu, "+ id=%X status = %d\n", msg->msg_id, msg->status);
-
-	if ((vcu != priv) && msg->msg_id < VCU_IPIMSG_DEC_WAITISR) {
-		pr_info("%s, vcu:%p != priv:%p\n", __func__, vcu, priv);
-		return 1;
-	}
 
 	if (vcu != NULL && vcu->abort)
 		return -EINVAL;
@@ -274,7 +234,7 @@ static int vcodec_vcu_send_msg(struct vdec_vcu_inst *vcu, void *msg, int len)
 	vcu->failure = 0;
 	vcu->signaled = 0;
 
-	err = vcu_ipi_send(vcu->dev, vcu->id, msg, len, vcu);
+	err = vcu_ipi_send(vcu->dev, vcu->id, msg, len);
 	if (err) {
 		mtk_vcodec_err(vcu, "send fail vcu_id=%d msg_id=%X status=%d",
 					   vcu->id, *(uint32_t *)msg, err);
@@ -313,7 +273,7 @@ int vcu_dec_init(struct vdec_vcu_inst *vcu)
 	vcu->signaled = 0;
 	vcu->failure = 0;
 
-	err = vcu_ipi_register(vcu->dev, vcu->id, vcu->handler, NULL, vcu);
+	err = vcu_ipi_register(vcu->dev, vcu->id, vcu->handler, NULL, NULL);
 	if (err != 0) {
 		mtk_vcodec_err(vcu, "vcu_ipi_register fail status=%d", err);
 		return err;
@@ -379,7 +339,7 @@ int vcu_dec_query_cap(struct vdec_vcu_inst *vcu, unsigned int id, void *out)
 	vcu->id = (vcu->id == IPI_VCU_INIT) ? IPI_VDEC_COMMON : vcu->id;
 	vcu->handler = vcu_dec_ipi_handler;
 
-	err = vcu_ipi_register(vcu->dev, vcu->id, vcu->handler, NULL, vcu);
+	err = vcu_ipi_register(vcu->dev, vcu->id, vcu->handler, NULL, NULL);
 	if (err != 0) {
 		mtk_vcodec_err(vcu, "vcu_ipi_register fail status=%d", err);
 		return err;
