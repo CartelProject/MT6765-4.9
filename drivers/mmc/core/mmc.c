@@ -815,6 +815,9 @@ static int mmc_compare_ext_csds(struct mmc_card *card, unsigned bus_width)
 	kfree(bw_ext_csd);
 	return err;
 }
+//cjc add 
+#define flash_info_size 128
+char mtk_flash_cid[flash_info_size] = {0};
 
 MMC_DEV_ATTR(cid, "%08x%08x%08x%08x\n", card->raw_cid[0], card->raw_cid[1],
 	card->raw_cid[2], card->raw_cid[3]);
@@ -1707,7 +1710,11 @@ static int mmc_init_card(struct mmc_host *host, u32 ocr,
 		card->rca = 1;
 		memcpy(card->raw_cid, cid, sizeof(card->raw_cid));
 	}
-
+	//cjc add
+	memset(mtk_flash_cid,0,flash_info_size);
+	snprintf(mtk_flash_cid,sizeof(mtk_flash_cid),"%08x%08x%08x%08x",card->raw_cid[0], card->raw_cid[1],
+	card->raw_cid[2], card->raw_cid[3]);
+	
 	/*
 	 * Call the optional HC's init_card function to handle quirks.
 	 */

@@ -1225,9 +1225,15 @@ int msdc_of_parse(struct platform_device *pdev, struct mmc_host *mmc)
 
 	/* get cd_gpio and cd_level */
 	cd_gpio = of_get_named_gpio(np, "cd-gpios", 0);
+	#if defined(YK672_CONFIG)||defined(YK676_CONFIG)||defined(YK676V6_CONFIG)||defined(YK672_MT61_CONFIG)||defined(YK686_CONFIG)||defined(YK685_CONFIG)||defined(YK676V2_CONFIG)||defined(YK179_CONFIG)
+	if (of_property_read_u8(np, "cd_level_high", &host->hw->cd_level))
+		pr_notice("[msdc%d] cd_level_high isn't found in device tree\n",
+			host->id);
+	#else
 	if (of_property_read_u8(np, "cd_level", &host->hw->cd_level))
 		pr_notice("[msdc%d] cd_level isn't found in device tree\n",
 			host->id);
+	#endif
 
 	msdc_get_register_settings(host, np);
 

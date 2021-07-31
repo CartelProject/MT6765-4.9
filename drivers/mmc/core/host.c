@@ -224,7 +224,12 @@ int mmc_of_parse(struct mmc_host *host)
 	 */
 
 	/* Parse Card Detection */
+
+	#ifdef CONFIG_TERACUBE_2E 
+	if ((device_property_read_bool(dev, "non-removable"))&&(device_property_read_bool(dev, "no-sd"))) {
+	#else
 	if (device_property_read_bool(dev, "non-removable")) {
+	#endif
 		host->caps |= MMC_CAP_NONREMOVABLE;
 	} else {
 		cd_cap_invert = device_property_read_bool(dev, "cd-inverted");
