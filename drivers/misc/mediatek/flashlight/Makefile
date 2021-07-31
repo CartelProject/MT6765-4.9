@@ -40,3 +40,4 @@ subdir-ccflags-y += \
 	-I$(MTK_CUSTOM_PATH)/pmic/include \
 	-I$(MTK_CUSTOM_PATH)/pmic
 
+obj-$(CONFIG_MTK_FLASHLIGHT_CONST) += flashlights-const-gpio.o

@@ -212,3 +212,12 @@ config MTK_FLASHLIGHT_DLPT
 	  the current of battary dynamicly. It will start by request
 	  and notice user by kernel notifier.
 
+config MTK_FLASHLIGHT_CONST
+	tristate "Mediatek const flashlight driver"
+	default n
+	help
+	  This is flashlight const driver for camera.
+
+	  Say Y here if you want a flashlight core to handle flashlight devices.
+	  If you have any questions about this, say Y here, only say N
+	  if you know exactly what you are doing.
