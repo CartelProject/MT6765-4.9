@@ -12,6 +12,9 @@
  */
 
 #include "gpio.h"
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+#include <linux/delay.h>
+#endif
 
 struct GPIO_PINCTRL gpio_pinctrl_list_cam[GPIO_CTRL_STATE_MAX_NUM_CAM] = {
 	/* Main */
@@ -34,6 +37,15 @@ struct GPIO_PINCTRL gpio_pinctrl_list_switch[GPIO_CTRL_STATE_MAX_NUM_SWITCH] = {
 	{"cam_mipi_switch_sel_1"},
 	{"cam_mipi_switch_sel_0"}
 };
+#endif
+
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+struct pinctrl *camctrl = NULL;
+struct pinctrl_state *cam2_pnd_h = NULL;
+struct pinctrl_state *cam2_pnd_l = NULL;
+struct pinctrl_state *cam2_rst_h = NULL;
+struct pinctrl_state *cam2_rst_l = NULL;
+
 #endif
 
 static struct GPIO gpio_instance;
@@ -141,7 +153,38 @@ static enum IMGSENSOR_RETURN gpio_init(void *pinstance)
 		}
 	}
 #endif
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+       	camctrl = devm_pinctrl_get(&pplatform_dev->dev);
+	if (IS_ERR(camctrl)) {
+		dev_err(&pplatform_dev->dev, "Cannot find camera pinctrl!");
+		ret = PTR_ERR(camctrl);
+	}
+    
+        cam2_pnd_h = pinctrl_lookup_state(camctrl, "cam2_pnd1");
+	if (IS_ERR(cam2_pnd_h)) {
+		ret = PTR_ERR(cam2_pnd_h);
+		pr_debug("%s : pinctrl err, cam2_pnd_h\n", __func__);
+	}
 
+	cam2_pnd_l = pinctrl_lookup_state(camctrl, "cam2_pnd0");
+	if (IS_ERR(cam2_pnd_l)) {
+		ret = PTR_ERR(cam2_pnd_l);
+		pr_debug("%s : pinctrl err, cam2_pnd_l\n", __func__);
+	}
+
+	cam2_rst_h = pinctrl_lookup_state(camctrl, "cam2_rst1");
+	if (IS_ERR(cam2_rst_h)) {
+		ret = PTR_ERR(cam2_rst_h);
+		pr_debug("%s : pinctrl err, cam2_rst_h\n", __func__);
+	}
+
+	cam2_rst_l = pinctrl_lookup_state(camctrl, "cam2_rst0");
+	if (IS_ERR(cam2_rst_l)) {
+		ret = PTR_ERR(cam2_rst_l);
+		pr_debug("%s : pinctrl err, cam2_rst_l\n", __func__);
+	}
+
+#endif
 	return ret;
 }
 
@@ -205,6 +248,93 @@ static enum IMGSENSOR_RETURN gpio_set(
 
 	return IMGSENSOR_RETURN_SUCCESS;
 }
+
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_)  //xjl 20180619
+int mtkcam_gpio_set(enum GPIO_CTRL_STATE shelter_pin_state)
+{
+        int ret = 0;
+
+        mutex_lock(&pinctrl_mutex);
+	switch (shelter_pin_state) {
+	        case GPIO_CTRL_STATE_CAM2_RST_L:
+                            if (cam2_rst_l != NULL && !IS_ERR(cam2_rst_l))
+                                {
+				pinctrl_select_state(camctrl, cam2_rst_l); 
+                                pr_err("<zwl> main2 rst low!!\n");
+                                break;
+                                  }  
+	        case GPIO_CTRL_STATE_CAM2_RST_H:
+                             if (cam2_rst_h != NULL && !IS_ERR(cam2_rst_h)){
+                           	pinctrl_select_state(camctrl, cam2_rst_h);
+                                pr_err("<zwl> mian2 rst HIGH!!\n");
+		                break;
+                                }
+	        case GPIO_CTRL_STATE_CAM2_PDN_L:
+                              if (cam2_pnd_l != NULL && !IS_ERR(cam2_pnd_l)){
+                                pinctrl_select_state(camctrl, cam2_pnd_l);
+                                pr_err("<zwl> mian2 pdn low!!\n");
+		                break;
+                                 }
+                case GPIO_CTRL_STATE_CAM2_PDN_H:
+                               if (cam2_pnd_h != NULL && !IS_ERR(cam2_pnd_h)){
+                                pinctrl_select_state(camctrl, cam2_pnd_h);   
+                                pr_err("<zwl> mian2 pdn high!!\n");
+		                break;
+                                }
+
+               default:
+		                pr_err("PwrType(%d) is invalid !!\n", shelter_pin_state);
+                                ret = 1;
+		               break; 
+                              }
+                mutex_unlock(&pinctrl_mutex);
+               return 0;
+}
+
+int kdCISModulePowerOnMain2(bool On)
+{
+    if (On)
+       {
+#if 1
+
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_RST_L)){pr_err("[CAMERA SENSOR] set gpio failed!! \n");}
+          mdelay(5);//10
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_RST_H)){pr_err("[CAMERA SENSOR] set gpio failed!! \n");} 
+          mdelay(2);//10
+        #if defined(REVERSE_PDN_ONE_ZERO) //reseve the pdn seq
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_PDN_H)){pr_err("[CAMERA LENS] set gpio failed!! \n");}
+        #else
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_PDN_L)){pr_err("[CAMERA LENS] set gpio failed!! \n");} 
+	  #if 1 //defined(YK739_CUSTOMER_ZHUOXINTE_Z5201_HD720) //add for sp0a38
+          mdelay(1);//10
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_PDN_H)){pr_err("[CAMERA LENS] set gpio failed!! \n");}
+          mdelay(1);//10
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_PDN_L)){pr_err("[CAMERA LENS] set gpio failed!! \n");} 
+          #endif
+        #endif
+       }
+       else
+       {
+#if 1
+
+          //mdelay(10);        
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_RST_L)){pr_err("[CAMERA SENSOR] set gpio failed!! \n");} 
+        #if defined(REVERSE_PDN_ONE_ZERO)
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_PDN_L)){pr_err("[CAMERA LENS] set gpio failed!! \n");} 
+        #else
+          mdelay(3);
+          if(mtkcam_gpio_set(GPIO_CTRL_STATE_CAM2_PDN_H)){pr_err("[CAMERA LENS] set gpio failed!! \n");} 
+        #endif
+#endif
+
+        }
+#endif
+      return 0;
+}
+
+#endif
+
+
 
 static struct IMGSENSOR_HW_DEVICE device = {
 	.pinstance = (void *)&gpio_instance,

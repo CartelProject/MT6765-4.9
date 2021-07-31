@@ -102,14 +102,45 @@ static enum IMGSENSOR_RETURN mclk_set(
 	/*pr_debug("%s : sensor_idx %d mclk_set pinctrl, PinIdx %d, Val %d\n",
 	 *__func__, sensor_idx, pin, pin_state);
 	 */
-
+        #if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+        struct pinctrl_state *ppinctrl_state_main2;
+        #endif
 	if (pin_state < IMGSENSOR_HW_PIN_STATE_LEVEL_0 ||
 	   pin_state > IMGSENSOR_HW_PIN_STATE_LEVEL_HIGH) {
 		ret = IMGSENSOR_RETURN_ERROR;
 	} else {
 		state_index = (pin_state > IMGSENSOR_HW_PIN_STATE_LEVEL_0)
 		    ? MCLK_STATE_ENABLE : MCLK_STATE_DISABLE;
+            #if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+             if(IMGSENSOR_SENSOR_IDX_MAIN == sensor_idx){
+                ppinctrl_state     = pinst->ppinctrl_state[sensor_idx][state_index];
+                ppinctrl_state_main2 = pinst->ppinctrl_state[IMGSENSOR_SENSOR_IDX_MAIN2][state_index];
 
+				if (!IS_ERR(ppinctrl_state))
+					pinctrl_select_state(pinst->ppinctrl, ppinctrl_state);
+				else
+					pr_err("%s : sensor_idx %d mclk_set pinctrl, PinIdx %d, Val %d\n",
+					__func__, sensor_idx, pin, state_index);
+
+				if (!IS_ERR(ppinctrl_state_main2))
+				{
+					pinctrl_select_state(pinst->ppinctrl,ppinctrl_state_main2);
+					//printk("<xieen>main2 sp0a08 cam2 mclk_set=\n");
+				}
+				else
+					pr_err("%s : sensor_idx %d mclk_set pinctrl, PinIdx %d, Val %d\n",__func__, IMGSENSOR_SENSOR_IDX_MAIN2, pin, state_index);
+             }
+             else
+                {
+	        ppinctrl_state = pinst->ppinctrl_state[sensor_idx][state_index];
+
+                if (!IS_ERR(ppinctrl_state))
+			pinctrl_select_state(pinst->ppinctrl, ppinctrl_state);
+		else
+			pr_err("%s : sensor_idx %d mclk_set pinctrl, PinIdx %d, Val %d\n",
+			__func__, sensor_idx, pin, state_index);
+               }
+             #else
 		ppinctrl_state = pinst->ppinctrl_state[sensor_idx][state_index];
 		mutex_lock(&pinctrl_mutex);
 		if (ppinctrl_state != NULL && !IS_ERR(ppinctrl_state))
@@ -122,6 +153,7 @@ static enum IMGSENSOR_RETURN mclk_set(
 			    pin,
 			    pin_state);
 		mutex_unlock(&pinctrl_mutex);
+       #endif  //zwl add end 20180303
 	}
 	return ret;
 }

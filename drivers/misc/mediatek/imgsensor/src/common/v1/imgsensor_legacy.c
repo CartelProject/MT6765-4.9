@@ -109,5 +109,30 @@ int iBurstWriteReg_multi(
 }
 
 
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+int iWriteRegI2C6(u8 *a_pSendData, u16 a_sizeSendData, u16 i2cId)
+{
+	return imgsensor_i2c_write(pgi2c6_cfg_legacy,
+								a_pSendData,
+								a_sizeSendData,
+								a_sizeSendData,
+								i2cId,
+								IMGSENSOR_I2C_SPEED);
+}
+
+int iReadRegI2C6(u8 *a_pSendData, u16 a_sizeSendData, u8 *a_pRecvData, u16 a_sizeRecvData, u16 i2cId)
+{
+	return imgsensor_i2c_read(pgi2c6_cfg_legacy,
+								a_pSendData,
+								a_sizeSendData,
+								a_pRecvData,
+								a_sizeRecvData,
+								i2cId,
+								IMGSENSOR_I2C_SPEED);
+}
+
+#endif   //zwl add end 20180303
+
+
 #endif
 

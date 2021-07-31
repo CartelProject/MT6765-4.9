@@ -25,9 +25,7 @@
 #include <linux/types.h>
 
 #include "s5k3l8mipiraw_Sensor.h"
-
-
-
+   
 /**************************** Modify end *****************************/
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
@@ -51,7 +49,7 @@ static struct imgsensor_info_struct imgsensor_info = {
 		/*	 following for GetDefaultFramerateByScenario()	*/
 		.max_framerate = 300,
 	},
-	#ifdef NONCONTINUEMODE
+	#if 0//def NONCONTINUEMODE
 	.cap = {
 		.pclk = 560000000,
 		.linelength  = 5920,//5808,
@@ -61,13 +59,13 @@ static struct imgsensor_info_struct imgsensor_info = {
 		.grabwindow_width  = 4160,
 		.grabwindow_height = 3120,
 		.mipi_data_lp2hs_settle_dc = 85,
-		.mipi_pixel_rate = 454700000,
+		.mipi_pixel_rate = 435200000,
 		/*	 following for GetDefaultFramerateByScenario()	*/
 		.max_framerate = 300,
 	},
 	#else //CONTINUEMODE
 	.cap = {
-		.pclk = 563680000,
+		.pclk = 566400000,
 		.linelength  = 5808,
 		.framelength = 3234,
 		.startx = 24,
@@ -75,13 +73,13 @@ static struct imgsensor_info_struct imgsensor_info = {
 		.grabwindow_width  = 4160,
 		.grabwindow_height = 3120,
 		.mipi_data_lp2hs_settle_dc = 21,
-		.mipi_pixel_rate = 454700000,
+		.mipi_pixel_rate = 435200000,
 		/*	 following for GetDefaultFramerateByScenario()	*/
 		.max_framerate = 300,
 	},
 	#endif
 	.cap1 = {
-		.pclk = 563680000,
+		.pclk = 566400000,
 		.linelength  = 5808,
 		.framelength = 6490,
 		.startx = 24,
@@ -89,7 +87,7 @@ static struct imgsensor_info_struct imgsensor_info = {
 		.grabwindow_width  = 4160,
 		.grabwindow_height = 3120,
 		.mipi_data_lp2hs_settle_dc = 21,
-		.mipi_pixel_rate = 454700000,
+		.mipi_pixel_rate = 435200000,
 		/*	 following for GetDefaultFramerateByScenario()	*/
 		.max_framerate = 150,
 	},
@@ -102,7 +100,7 @@ static struct imgsensor_info_struct imgsensor_info = {
 		.grabwindow_width  = 4208,
 		.grabwindow_height = 3120,
 		.mipi_data_lp2hs_settle_dc = 21,
-		.mipi_pixel_rate = 449700000,
+		.mipi_pixel_rate = 435200000,
 		/*	 following for GetDefaultFramerateByScenario()	*/
 		.max_framerate = 300,
 	},
@@ -212,7 +210,11 @@ static struct imgsensor_info_struct imgsensor_info = {
 	.sensor_mode_num = 5,
 
 	.cap_delay_frame = 3,		//enter capture delay frame num
+#if defined(YK688_CUSTOMER_SK_P6_HDPLUS) //xjl 20190703	
+	.pre_delay_frame = 8,
+#else
 	.pre_delay_frame = 3,		//enter preview delay frame num
+#endif	
 	.video_delay_frame = 3,		//enter video delay frame num
 	.hs_video_delay_frame = 3,
 	.slim_video_delay_frame = 3,
@@ -226,7 +228,7 @@ static struct imgsensor_info_struct imgsensor_info = {
 	.sensor_interface_type = SENSOR_INTERFACE_TYPE_MIPI,
 	.mipi_sensor_type = MIPI_OPHY_NCSI2,
 	.mipi_settle_delay_mode = 1,
-	.sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_Gr,
+	.sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_Gb, //SENSOR_OUTPUT_FORMAT_RAW_Gr //xjl 20181124
 	.mclk = 24,//mclk value, suggest 24Mhz or 26Mhz
 	.mipi_lane_num = SENSOR_MIPI_4_LANE,//mipi lane num
 	.i2c_addr_table = {0x5a, 0x20, 0xff},
@@ -313,7 +315,6 @@ static kal_uint16 read_cmos_sensor_byte(kal_uint16 addr)
 	kal_uint16 get_byte = 0;
 	char pu_send_cmd[2] = {(char)(addr >> 8), (char)(addr & 0xFF) };
 // Add this func to set i2c speed by each sensor
-	kdSetI2CSpeed(imgsensor_info.i2c_speed);
 	iReadRegI2C(pu_send_cmd, 2, (u8 *)&get_byte, 1, imgsensor.i2c_write_id);
 
 	return get_byte;
@@ -324,7 +325,6 @@ static kal_uint16 read_cmos_sensor(kal_uint32 addr)
 	kal_uint16 get_byte = 0;
 	char pu_send_cmd[2] = {(char)(addr >> 8), (char)(addr & 0xFF) };
 // Add this func to set i2c speed by each sensor
-	kdSetI2CSpeed(imgsensor_info.i2c_speed);
 	iReadRegI2C(pu_send_cmd, 2, (u8 *)&get_byte, 1, imgsensor.i2c_write_id);
 	return get_byte;
 }
@@ -334,7 +334,6 @@ static void write_cmos_sensor_byte(kal_uint32 addr, kal_uint32 para)
 	char pu_send_cmd[3] = {(char)(addr >> 8),
 		(char)(addr & 0xFF), (char)(para & 0xFF)};
 // Add this func to set i2c speed by each sensor
-	kdSetI2CSpeed(imgsensor_info.i2c_speed);
 	iWriteRegI2C(pu_send_cmd, 3, imgsensor.i2c_write_id);
 }
 #endif
@@ -343,7 +342,6 @@ static void write_cmos_sensor(kal_uint16 addr, kal_uint16 para)
 	char pusendcmd[4] = {(char)(addr >> 8), (char)(addr & 0xFF),
 				(char)(para >> 8), (char)(para & 0xFF)};
 
-	kdSetI2CSpeed(imgsensor_info.i2c_speed);
 	iWriteRegI2C(pusendcmd, 4, imgsensor.i2c_write_id);
 }
 
@@ -589,6 +587,7 @@ static void ihdr_write_shutter_gain(kal_uint16 le,
 
 }
 
+#if 0
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	pr_info("image_mirror = %d\n", image_mirror);
@@ -625,6 +624,7 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 	}
 
 }
+#endif
 
 /*************************************************************************
  *	 FUNCTION
@@ -1312,7 +1312,7 @@ kal_uint16 addr_data_pair_capture_s5k3l8_fps[] = {
 	0x030E, 0x00c8,
 	0x030A, 0x0001,
 	0x0308, 0x0008,
-#ifdef NONCONTINUEMODE
+#if 0//def NONCONTINUEMODE
 	0x0342, 0x1720,
 #else
 	0x0342, 0x16B0,
@@ -1555,7 +1555,14 @@ static kal_uint32 open(void)
 	return ERROR_SENSOR_CONNECT_FAIL;
 
 	/* initail sequence write in  */
+
+#if defined(YK688_CUSTOMER_SK_P6_HDPLUS) //xjl 20190703
+	mdelay(40);
 	sensor_init();
+    mdelay(30);
+#else
+	sensor_init();
+#endif
 
 	spin_lock(&imgsensor_drv_lock);
 
@@ -1636,9 +1643,10 @@ static kal_uint32 preview(
 	imgsensor.autoflicker_en = KAL_FALSE;
 	spin_unlock(&imgsensor_drv_lock);
 	preview_setting();
-	set_mirror_flip(IMAGE_NORMAL);
+	//set_mirror_flip(imgsensor.mirror);
+    
 	mdelay(10);
-	#ifdef FANPENGTAO
+	#if 0//def FANPENGTAO
 	int i = 0;
 
 	for (i = 0; i < 10; i++) {
@@ -1700,7 +1708,7 @@ static kal_uint32 capture(
 	}
 	spin_unlock(&imgsensor_drv_lock);
 	capture_setting(imgsensor.current_fps);
-	set_mirror_flip(IMAGE_NORMAL);
+	//set_mirror_flip(imgsensor.mirror);
 	mdelay(10);
 
 	return ERROR_NONE;
@@ -1722,7 +1730,7 @@ static kal_uint32 normal_video(
 	imgsensor.autoflicker_en = KAL_FALSE;
 	spin_unlock(&imgsensor_drv_lock);
 	normal_video_setting(imgsensor.current_fps);
-	set_mirror_flip(IMAGE_NORMAL);
+	//set_mirror_flip(imgsensor.mirror);
 
 	return ERROR_NONE;
 }	/*	normal_video   */
@@ -1746,7 +1754,7 @@ static kal_uint32 hs_video(
 	imgsensor.autoflicker_en = KAL_FALSE;
 	spin_unlock(&imgsensor_drv_lock);
 	hs_video_setting();
-	set_mirror_flip(IMAGE_NORMAL);
+	//set_mirror_flip(imgsensor.mirror);
 
 	return ERROR_NONE;
 }	/*	hs_video   */
@@ -1770,7 +1778,7 @@ static kal_uint32 slim_video(
 	imgsensor.autoflicker_en = KAL_FALSE;
 	spin_unlock(&imgsensor_drv_lock);
 	slim_video_setting();
-	set_mirror_flip(IMAGE_NORMAL);
+	//set_mirror_flip(imgsensor.mirror);
 	return ERROR_NONE;
 }
 
@@ -2517,9 +2525,9 @@ static kal_uint32 streaming_control(kal_bool enable)
 {
 	pr_debug("streaming_enable(0=Sw Standby,1=streaming): %d\n", enable);
 	if (enable)
-		write_cmos_sensor(0x0100, 0x0100);
+		write_cmos_sensor(0x0100, 0x0103);  //0x0100 //xjl 20181124
 	else
-		write_cmos_sensor(0x0100, 0x0000);
+		write_cmos_sensor(0x0100, 0x0003);  //0x0000
 	return ERROR_NONE;
 }
 

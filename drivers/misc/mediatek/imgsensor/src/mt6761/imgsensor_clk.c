@@ -191,7 +191,10 @@ int imgsensor_clk_set(
 	const int supported_mclk_freq[MCLK_MAX] = {
 		FREQ_6MHZ, FREQ_12MHZ, FREQ_13MHZ, FREQ_24MHZ,
 		FREQ_26MHZ, FREQ_48MHZ, FREQ_52MHZ };
-
+	#if defined(_MAIN2_CAM_SHELTER_DESIGN2_)
+	if(pmclk->TG==2 || pmclk->TG==3)
+	pmclk->freq =FREQ_24MHZ;//cjc add 
+	#endif
 	for (mclk_index = MCLK_ENU_START; mclk_index < MCLK_MAX; mclk_index++) {
 		if (pmclk->freq == supported_mclk_freq[mclk_index])
 			break;

@@ -31,7 +31,7 @@
 #ifdef IMGSENSOR_I2C_1000K
 #define IMGSENSOR_I2C_SPEED              1000
 #else
-#define IMGSENSOR_I2C_SPEED              400
+#define IMGSENSOR_I2C_SPEED              200//cjc 400
 #endif
 
 struct IMGSENSOR_I2C_STATUS {
@@ -81,6 +81,10 @@ void imgsensor_i2c_filter_msg(struct IMGSENSOR_I2C_CFG *pi2c_cfg, bool en);
 
 #ifdef IMGSENSOR_LEGACY_COMPAT
 extern struct IMGSENSOR_I2C_CFG *pgi2c_cfg_legacy;
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+extern struct IMGSENSOR_I2C_CFG *pgi2c6_cfg_legacy;
+void imgsensor_i2c_set_device_main2(struct IMGSENSOR_I2C_CFG *pi2c_cfg);
+#endif
 void imgsensor_i2c_set_device(struct IMGSENSOR_I2C_CFG *pi2c_cfg);
 #endif
 

@@ -268,6 +268,16 @@ void imgsensor_i2c_filter_msg(struct IMGSENSOR_I2C_CFG *pi2c_cfg, bool en)
 
 #ifdef IMGSENSOR_LEGACY_COMPAT
 struct IMGSENSOR_I2C_CFG *pgi2c_cfg_legacy;
+
+#if defined(_MAIN2_CAM_SHELTER_DESIGN2_) //xjl 20180619
+struct IMGSENSOR_I2C_CFG *pgi2c6_cfg_legacy;
+void imgsensor_i2c_set_device_main2(struct IMGSENSOR_I2C_CFG *pi2c_cfg)
+{
+	printk("<xjl>imgsensor_i2c_set_device_main2 enter\n");
+	pgi2c6_cfg_legacy = pi2c_cfg;     
+}
+#endif
+
 void imgsensor_i2c_set_device(struct IMGSENSOR_I2C_CFG *pi2c_cfg)
 {
 	pgi2c_cfg_legacy = pi2c_cfg;

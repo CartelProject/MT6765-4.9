@@ -1,16 +1,3 @@
-/*
- * Copyright (C) 2018 MediaTek Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- */
-
 /*****************************************************************************
  *
  * Filename:
@@ -38,6 +25,19 @@
 #define GC2375H_BLK_Select2_H  0xc0
 #define GC2375H_BLK_Select2_L  0x00
 #else
+
+// #define GC2375H_MIRROR         0xd5
+// #define GC2375H_BLK_Select1_H  0x00
+// #define GC2375H_BLK_Select1_L  0x3c
+// #define GC2375H_BLK_Select2_H  0x00
+// #define GC2375H_BLK_Select2_L  0x03
+
+// #define GC2375H_MIRROR         0xd6
+// #define GC2375H_BLK_Select1_H  0x3c
+// #define GC2375H_BLK_Select1_L  0x00
+// #define GC2375H_BLK_Select2_H  0xc0
+// #define GC2375H_BLK_Select2_L  0x00
+
 #define GC2375H_MIRROR         0xd4
 #define GC2375H_BLK_Select1_H  0x00
 #define GC2375H_BLK_Select1_L  0x3c
@@ -45,15 +45,14 @@
 #define GC2375H_BLK_Select2_L  0x03
 #endif
 
-
-
-enum IMGSENSOR_MODE {
+enum IMGSENSOR_MODE{
 	IMGSENSOR_MODE_INIT,
 	IMGSENSOR_MODE_PREVIEW,
 	IMGSENSOR_MODE_CAPTURE,
 	IMGSENSOR_MODE_VIDEO,
 	IMGSENSOR_MODE_HIGH_SPEED_VIDEO,
 	IMGSENSOR_MODE_SLIM_VIDEO,
+	IMGSENSOR_MODE_CUSTOM1,
 };
 
 struct imgsensor_mode_struct {
@@ -99,9 +98,11 @@ struct imgsensor_info_struct {
 	struct imgsensor_mode_struct normal_video;
 	struct imgsensor_mode_struct hs_video;
 	struct imgsensor_mode_struct slim_video;
+	struct imgsensor_mode_struct custom1; //define for dual camera by anxiang.xiao 20190102
 	kal_uint8  ae_shut_delay_frame;
 	kal_uint8  ae_sensor_gain_delay_frame;
 	kal_uint8  ae_ispGain_delay_frame;
+    kal_uint8  frame_time_delay_frame;    //isp gain delay frame for AE cycle //define for dual camera by anxiang.xiao 20190102
 	kal_uint8  ihdr_support;
 	kal_uint8  ihdr_le_firstline;
 	kal_uint8  sensor_mode_num;
@@ -110,6 +111,7 @@ struct imgsensor_info_struct {
 	kal_uint8  video_delay_frame;
 	kal_uint8  hs_video_delay_frame;
 	kal_uint8  slim_video_delay_frame;
+	kal_uint8  custom1_delay_frame; //define for dual camera by anxiang.xiao 20190102
 	kal_uint8  margin;
 	kal_uint32 min_shutter;
 	kal_uint32 max_frame_length;
@@ -123,8 +125,7 @@ struct imgsensor_info_struct {
 	kal_uint8  i2c_addr_table[5];
 };
 
-extern int iReadRegI2C(u8 *a_pSendData, u16 a_sizeSendData,
-	u8 *a_pRecvData, u16 a_sizeRecvData, u16 i2cId);
+extern int iReadRegI2C(u8 *a_pSendData, u16 a_sizeSendData, u8 *a_pRecvData, u16 a_sizeRecvData, u16 i2cId);
 extern int iWriteRegI2C(u8 *a_pSendData, u16 a_sizeSendData, u16 i2cId);
 extern int iWriteReg(u16 a_u2Addr, u32 a_u4Data, u32 a_u4Bytes, u16 i2cId);
 

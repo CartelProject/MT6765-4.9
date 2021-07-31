@@ -29,16 +29,25 @@ enum IMGSENSOR_RETURN
 	/*imgsensor_hw_mt6306_open,*/
 	imgsensor_hw_mclk_open
 };
-
+#if defined(YK751_CONFIG)||defined(YK686_CONFIG)||defined(YK676V2_CONFIG)
+#define IMGSENSOR_HW_ID_AVDD_CUSTOM IMGSENSOR_HW_ID_REGULATOR
+#else
+#define IMGSENSOR_HW_ID_AVDD_CUSTOM IMGSENSOR_HW_ID_GPIO
+#endif
+#if defined(YK751_CONFIG)||defined(YK686_CONFIG)||defined(YK676V2_CONFIG)
+#define IMGSENSOR_HW_ID_AVDD_SUB_CUSTOM IMGSENSOR_HW_ID_REGULATOR
+#else
+#define IMGSENSOR_HW_ID_AVDD_SUB_CUSTOM IMGSENSOR_HW_ID_GPIO
+#endif
 struct IMGSENSOR_HW_CFG imgsensor_custom_config[] = {
 	{
 		IMGSENSOR_SENSOR_IDX_MAIN,
 		IMGSENSOR_I2C_DEV_0,
 		{
 			{IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
-			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_AVDD},
+			{IMGSENSOR_HW_ID_AVDD_CUSTOM, IMGSENSOR_HW_PIN_AVDD},
 			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
-			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_DVDD},
+			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DVDD},
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_PDN},
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_RST},
 			{IMGSENSOR_HW_ID_NONE, IMGSENSOR_HW_PIN_NONE},
@@ -49,9 +58,9 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config[] = {
 		IMGSENSOR_I2C_DEV_1,
 		{
 			{IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
-			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_AVDD},
+			{IMGSENSOR_HW_ID_AVDD_SUB_CUSTOM, IMGSENSOR_HW_PIN_AVDD},
 			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
-			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_DVDD},
+			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DVDD},
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_PDN},
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_RST},
 			{IMGSENSOR_HW_ID_NONE, IMGSENSOR_HW_PIN_NONE},
@@ -62,7 +71,7 @@ struct IMGSENSOR_HW_CFG imgsensor_custom_config[] = {
 		IMGSENSOR_I2C_DEV_2,
 		{
 			{IMGSENSOR_HW_ID_MCLK, IMGSENSOR_HW_PIN_MCLK},
-			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_AVDD},
+			{IMGSENSOR_HW_ID_AVDD_CUSTOM, IMGSENSOR_HW_PIN_AVDD},
 			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DOVDD},
 			{IMGSENSOR_HW_ID_REGULATOR, IMGSENSOR_HW_PIN_DVDD},
 			{IMGSENSOR_HW_ID_GPIO, IMGSENSOR_HW_PIN_PDN},
@@ -149,6 +158,7 @@ struct IMGSENSOR_HW_POWER_SEQ platform_power_sequence[] = {
 
 /* Legacy design */
 struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence[] = {
+#if 0 //xjl 20180607
 /* GC */
 #if defined(GC5035_MIPI_RAW)
 	{
@@ -861,6 +871,826 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence[] = {
 			{RST, Vol_High, 5}
 		},
 	},
+#endif
+#endif
+//added by xen 20170919-begin
+//OV:
+#if defined(OV13855_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_OV13855_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 0},
+			{RST, Vol_Low, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1200, 0},
+			{AFVDD, Vol_2800, 1},
+			{PDN, Vol_High, 0},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+#if defined(OV8858_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_OV8858_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 0},
+			{RST, Vol_Low, 0},
+			{DOVDD, Vol_1800, 1},
+			{AVDD, Vol_2800, 1},
+			{DVDD, Vol_1200, 5},
+			//{AFVDD, Vol_2800, 1},
+			{PDN, Vol_High, 1},
+			{RST, Vol_High, 2}
+		},
+	},
+#endif
+#if defined(OV9760_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_OV9760_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 0},
+			{RST, Vol_Low, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1500, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+#if defined(OV9762_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_OV9762_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 0},
+			{RST, Vol_Low, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1500, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+#if defined(OV8825_MIPI_RAW)
+	{SENSOR_DRVNAME_OV8825_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 0},
+			{RST, Vol_Low, 0},
+			{DOVDD, Vol_1800, 1},
+			{AVDD, Vol_2800, 1},
+			{DVDD, Vol_1200, 5},
+			{AFVDD, Vol_2800, 1},
+			{PDN, Vol_High, 1},
+			{RST, Vol_High, 2}
+		},
+	},
+#endif
+#if defined(OV8856_MIPI_RAW)
+	{SENSOR_DRVNAME_OV8856_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1200, 0},
+			{AFVDD, Vol_2800, 2},
+			{PDN, Vol_Low, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_Low, 0},
+			{RST, Vol_High, 5},
+		},
+	},
+#endif
+#if defined(OV8865_MIPI_RAW)
+	{SENSOR_DRVNAME_OV8865_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1200, 0},
+			{AFVDD, Vol_2800, 2},
+			{PDN, Vol_Low, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_Low, 0},
+			{RST, Vol_High, 5},
+		},
+	},
+#endif
+#if defined(OV5648_MIPI_RAW)
+	{SENSOR_DRVNAME_OV5648_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1200, 0},
+			{AFVDD, Vol_2800, 2},
+			{PDN, Vol_Low, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_Low, 0},
+			{RST, Vol_High, 5},
+		},
+	},
+#endif
+
+/*GC*/
+#if defined(GC13023_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC13023_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC8024_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC8024_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC8024F_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC8024F_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC8034_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC8034_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC5035_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_GC5035_MIPI_RAW,
+		{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+		},
+	},
+#endif
+#if defined(GC5025_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC5025_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC5025F_MIPI_RAW) //xen 20171221
+		{
+			SENSOR_DRVNAME_GC5025F_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(OV4689_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_OV4689_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(GC2385_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC2385_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(OV4689_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_OV4689_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(GC2385F_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC2385F_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC2145_MIPI_YUV)
+		{
+			SENSOR_DRVNAME_GC2145_MIPI_YUV,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1500, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC2145_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC2145_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC2146_MIPI_YUV)
+		{
+			SENSOR_DRVNAME_GC2146_MIPI_YUV,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1500, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC0310_MIPI_YUV)
+		{
+			SENSOR_DRVNAME_GC0310_MIPI_YUV,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1500, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC0310_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC0310_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1500, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC030A_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_GC030A_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1500, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(GC033A_MIPI_RAW) //this chip has no RST pin
+		{
+			SENSOR_DRVNAME_GC033A_MIPI_RAW,
+			{
+				//{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 5},
+				//{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1500, 5},
+				{AVDD, Vol_2800, 5},
+				{SensorMCLK, Vol_High, 5},
+				{PDN, Vol_Low, 5},
+				//{RST, Vol_High, 5},
+				{PDN, Vol_High, 5},
+				{PDN, Vol_Low, 5}
+			},
+		},
+#endif
+
+/*A*/
+#if defined(A5142_MIPI_RAW) //xen 20171113
+		{
+			SENSOR_DRVNAME_A5142_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+/*AR*/
+#if defined(AR1335_MIPI_RAW) //xen 20171219
+		{
+			SENSOR_DRVNAME_AR1335_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+/*HI*/
+#if defined(HI846_MIPI_RAW) //xen 20171023, same with SP8409
+		{
+			SENSOR_DRVNAME_HI846_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(HI843B_MIPI_RAW) //zwl 20180306
+		{
+			SENSOR_DRVNAME_HI843B_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(HI556_MIPI_RAW)  //same with SP5509
+		{
+			SENSOR_DRVNAME_HI556_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(HI556F_MIPI_RAW)  //same with SP5509,front camera
+		{
+			SENSOR_DRVNAME_HI556F_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(HI544_MIPI_RAW)  //same with SP5509
+		{
+			SENSOR_DRVNAME_HI544_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{DVDD, Vol_1200, 5},
+				{AVDD, Vol_2800, 5},
+				{AFVDD, Vol_2800, 1},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+//Samsung:
+#if defined(S5K3L8_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_S5K3L8_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1200, 5},
+				{AFVDD, Vol_2800, 1},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(S5K3L6_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_S5K3L6_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1200, 5},
+				{AFVDD, Vol_2800, 1},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+//IMX
+#if defined(IMX190_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_IMX190_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1200, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(IMX135_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_IMX135_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1200, 5},
+				{AFVDD, Vol_2800, 1},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(IMX134_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_IMX134_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1200, 5},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(IMX214_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_IMX214_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{AVDD, Vol_2800, 0},
+			{DOVDD, Vol_1800, 0},
+			{DVDD, Vol_1000, 0},
+			{AFVDD, Vol_2800, 1},
+			{PDN, Vol_Low, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_Low, 0},
+			{RST, Vol_High, 1}
+		},
+	},
+#endif
+#if defined(IMX219_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_IMX219_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{AVDD, Vol_2800, 10},
+			{DOVDD, Vol_1800, 10},
+			{DVDD, Vol_1200, 10},
+			{AFVDD, Vol_2800, 5},
+			{PDN, Vol_Low, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_Low, 0},
+			{RST, Vol_High, 0}
+		},
+	},
+#endif
+#if defined(SP2609F_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_SP2609F_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1500, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(SP5508_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_SP5508_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_Low, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1200, 5},
+				{AFVDD, Vol_2800, 1},
+				{PDN, Vol_High, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(SP250A_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_SP250AMIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1500, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+#if defined(SP250AF_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_SP250AF_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1500, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(SP0A08_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_SP0A08_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1500, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(SP0821_MIPI_RAW)
+		{
+			SENSOR_DRVNAME_SP0821_MIPI_RAW,
+			{
+				{SensorMCLK, Vol_High, 0},
+				{PDN, Vol_High, 1},
+				{RST, Vol_Low, 10},
+				{DOVDD, Vol_1800, 5},
+				{AVDD, Vol_2800, 5},
+				{DVDD, Vol_1500, 5},
+				{PDN, Vol_Low, 5},
+				{RST, Vol_High, 5}
+			},
+		},
+#endif
+
+#if defined(OV5670_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_OV5670_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 5},
+			{RST, Vol_Low, 5},
+			{DOVDD, Vol_1800, 5},
+			{AVDD, Vol_2800, 5},
+			{DVDD, Vol_1200, 5},
+			{AFVDD, Vol_2800, 5},
+			{PDN, Vol_High, 5},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+
+//added by xen 20170919-end
+#if 0 //modified by xen 20171113
+#if defined(GC2365_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_GC2365_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_High, 1},
+			{RST, Vol_Low, 10},
+			{DOVDD, Vol_1800, 5},
+			{DVDD, Vol_1200, 5},
+			{AVDD, Vol_2800, 5},
+			{PDN, Vol_Low, 5},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+#if defined(GC2366_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_GC2366_MIPI_RAW,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_High, 1},
+			{RST, Vol_Low, 10},
+			{DOVDD, Vol_1800, 5},
+			{DVDD, Vol_1200, 5},
+			{AVDD, Vol_2800, 5},
+			{PDN, Vol_Low, 5},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+	/*Test*/
+#if defined(OV13870_MIPI_RAW_5MP)
+	{
+		SENSOR_DRVNAME_OV13870_MIPI_RAW_5MP,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{PDN, Vol_Low, 0},
+			{RST, Vol_Low, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1200, 0},
+			{AFVDD, Vol_2800, 1},
+			{PDN, Vol_High, 0},
+			{RST, Vol_High, 5}
+		},
+	},
+#endif
+#if defined(OV8856_MIPI_RAW_5MP)
+	{SENSOR_DRVNAME_OV8856_MIPI_RAW_5MP,
+		{
+			{SensorMCLK, Vol_High, 0},
+			{DOVDD, Vol_1800, 0},
+			{AVDD, Vol_2800, 0},
+			{DVDD, Vol_1200, 0},
+			{AFVDD, Vol_2800, 2},
+			{PDN, Vol_Low, 0},
+			{PDN, Vol_High, 0},
+			{RST, Vol_Low, 0},
+			{RST, Vol_High, 5},
+		},
+	},
+#endif
 #endif
 	/* add new sensor before this line */
 	{NULL,},
