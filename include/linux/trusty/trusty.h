@@ -19,6 +19,9 @@
 #include <linux/device.h>
 #include <linux/pagemap.h>
 
+#ifdef CONFIG_MICROTRUST_TEE_SUPPORT
+#define CONFIG_TRUSTY
+#endif
 
 #ifdef CONFIG_TRUSTY
 #ifdef CONFIG_TRUSTY_INTERRUPT_MAP
