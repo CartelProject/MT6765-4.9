@@ -118,3 +118,13 @@ all.config
 
 # fetched Android config fragments
 kernel/configs/android-*.cfg
+
+#
+# Ignore build directories.
+#
+out/
+AnyKernel/
+clang/
+gcc/
+gcc32/
+modules/
