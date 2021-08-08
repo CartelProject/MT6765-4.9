@@ -20,7 +20,6 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/ccu/src/$(MTK_PLATFORM)/ccu_ext_
 ccflags-y += -I$(srctree)/drivers/i2c/busses
 
 ccflags-y += -I$(srctree)/drivers/iommu/
-$(warning CCU_INC=$(srctree)/drivers/misc/mediatek/ccu/src/$(MTK_PLATFORM)/ccu_ext_interface)
 
 #$(warning $(subdir-ccflags-y))
 
