@@ -103,20 +103,20 @@ void eta6937_otg_start_timer(void)
 {
 	ktime_t ktime = ktime_set(10, 0);
 
-	printk("eta6937_otg_start_timer\n");
+	pr_debug("eta6937_otg_start_timer\n");
 	hrtimer_start(&eta6937_otg_kthread_timer, ktime, HRTIMER_MODE_REL);
 }
 
 int eta6937_otg_routine_thread(void *arg)
 {
-	printk("eta6937_otg_routine_thread enter\n");
+	pr_debug("eta6937_otg_routine_thread enter\n");
 	while (1) {
-		printk("eta6937_otg_routine_thread while(1)\n");
+		pr_debug("eta6937_otg_routine_thread while(1)\n");
 		wait_event(eta6937_otg_wait_que, (otg_set_tmr_flag == 1));
 		otg_set_tmr_flag =0;
 		if(eta6937_otg_status_flag ==1)
 		{
-			printk("eta6937_otg_routine_thread eta6937_set_tmr_rst(1)\n");
+			pr_debug("eta6937_otg_routine_thread eta6937_set_tmr_rst(1)\n");
 			eta6937_set_tmr_rst(1);
 			eta6937_otg_start_timer();		
 		}
@@ -206,7 +206,7 @@ static unsigned int charging_value_to_parameter(const unsigned int *parameter, c
 	if (val < array_size)
 		return parameter[val];
 
-	printk("eta6937 Can't find the parameter\n");
+	pr_debug("eta6937 Can't find the parameter\n");
 	return parameter[0];
 
 }
@@ -223,7 +223,7 @@ static unsigned int charging_parameter_to_value(const unsigned int *parameter, c
 			return i;
 	}
 
-	printk("eta6937 NO register value match\n");
+	pr_debug("eta6937 NO register value match\n");
 	/* TODO: ASSERT(0);    // not find the value */
 	return 0;
 }
@@ -247,7 +247,7 @@ static unsigned int bmt_find_closest_level(const unsigned int *pList, unsigned i
 			}
 		}
 
-		printk("eta6937 Can't find closest level\n");
+		pr_debug("eta6937 Can't find closest level\n");
 		return pList[0];
 		/* return CHARGE_CURRENT_0_00_MA; */
 	} else {
@@ -256,7 +256,7 @@ static unsigned int bmt_find_closest_level(const unsigned int *pList, unsigned i
 				return pList[i];
 		}
 
-		printk("eta6937 Can't find closest level\n");
+		pr_debug("eta6937 Can't find closest level\n");
 		return pList[number - 1];
 		/* return CHARGE_CURRENT_0_00_MA; */
 	}
@@ -358,7 +358,7 @@ unsigned int eta6937_read_byte(unsigned char cmd, unsigned char *returnData)
 		ret = i2c_transfer(new_client->adapter, msgs, xfers);
 
 		if (ret == -ENXIO) {
-			printk("eta6937 skipping non-existent adapter %s\n", new_client->adapter->name);
+			pr_debug("eta6937 skipping non-existent adapter %s\n", new_client->adapter->name);
 			break;
 		}
 	} while (ret != xfers && --retries);
@@ -396,7 +396,7 @@ unsigned int eta6937_write_byte(unsigned char cmd, unsigned char writeData)
 		ret = i2c_transfer(new_client->adapter, msgs, xfers);
 
 		if (ret == -ENXIO) {
-			printk("eta6937 skipping non-existent adapter %s\n", new_client->adapter->name);
+			pr_debug("eta6937 skipping non-existent adapter %s\n", new_client->adapter->name);
 			break;
 		}
 	} while (ret != xfers && --retries);
@@ -420,12 +420,12 @@ unsigned int eta6937_read_interface(unsigned char RegNum, unsigned char *val, un
 
 	ret = eta6937_read_byte(RegNum, &eta6937_reg);
 
-	printk("eta6937 [eta6937_read_interface] Reg[%x]=0x%x\n", RegNum, eta6937_reg);
+	pr_debug("eta6937 [eta6937_read_interface] Reg[%x]=0x%x\n", RegNum, eta6937_reg);
 
 	eta6937_reg &= (MASK << SHIFT);
 	*val = (eta6937_reg >> SHIFT);
 
-	printk("eta6937 [eta6937_read_interface] val=0x%x\n", *val);
+	pr_debug("eta6937 [eta6937_read_interface] val=0x%x\n", *val);
 
 	return ret;
 }
@@ -446,7 +446,7 @@ unsigned int eta6937_config_interface(unsigned char RegNum, unsigned char val, u
 
 	ret = eta6937_write_byte(RegNum, eta6937_reg);
 	mutex_unlock(&eta6937_access_lock);
-	printk("eta6937 [eta6937_config_interface] write Reg[%x]=0x%x from 0x%x\n", RegNum,
+	pr_debug("eta6937 [eta6937_config_interface] write Reg[%x]=0x%x from 0x%x\n", RegNum,
 		    eta6937_reg, eta6937_reg_ori);
 
 	return ret;
@@ -837,7 +837,7 @@ static void eta6937_hw_component_detect(void)
 	else
 		g_eta6937_hw_exist = 1;
 
-	printk("[eta6937_hw_component_detect] exist=%d, Reg[0x03]=0x%x\n",
+	pr_debug("[eta6937_hw_component_detect] exist=%d, Reg[0x03]=0x%x\n",
 		 g_eta6937_hw_exist, val);
 }
 
@@ -861,12 +861,12 @@ static int eta6937_enable_charging(struct charger_device *chg_dev, bool en)
 		set_gpio_charge_en(0); 
 		//ret = pinctrl_select_state(info->pinctrl, info->psc_chg_en_low);
 		//if (ret){
-		//	printk("eta6937 mycat Error pinctrl_select_state low");
+		//	pr_debug("eta6937 mycat Error pinctrl_select_state low");
     	//}
     	//else{
-      	//	printk("eta6937 mycat Ok pinctrl_select_state low");
+      	//	pr_debug("eta6937 mycat Ok pinctrl_select_state low");
     	//}
-		printk("eta6937 eta6937 calm enable charging\n");
+		pr_debug("eta6937 eta6937 calm enable charging\n");
 	} else {
 		eta6937_set_ce(1);
 		eta6937_set_hz_mode(1);
@@ -874,12 +874,12 @@ static int eta6937_enable_charging(struct charger_device *chg_dev, bool en)
 		set_gpio_charge_en(1); 
 		//ret = pinctrl_select_state(info->pinctrl, info->psc_chg_en_high);
 		//if (ret){
-		//	printk("eta6937 mycat Error pinctrl_select_state high");
+		//	pr_debug("eta6937 mycat Error pinctrl_select_state high");
     	//}
     	//else{
-      	//	printk("eta6937 mycat Ok pinctrl_select_state high");
+      	//	pr_debug("eta6937 mycat Ok pinctrl_select_state high");
     	//}
-		printk("eta6937 eta6937 calm disable charging\n");
+		pr_debug("eta6937 eta6937 calm disable charging\n");
 	}
 
 	return status;
@@ -908,7 +908,7 @@ static int eta6937_set_current(struct charger_device *chg_dev, u32 current_value
 	u32 array_size;
 	u32 register_value;
 
-	printk("liml_bat eta6937_set_current=%d\n",current_value);
+	pr_debug("liml_bat eta6937_set_current=%d\n",current_value);
 
 #if defined(CONFIG_TERACUBE_2E)
         if(chr_current_limi)
@@ -923,10 +923,10 @@ static int eta6937_set_current(struct charger_device *chg_dev, u32 current_value
 		array_size = ARRAY_SIZE(eta6937_CS_VTH);
 		set_chr_current = bmt_find_closest_level(eta6937_CS_VTH, array_size, current_value);
 
-	printk("eta6937 charging_set_current  set_chr_current=%d\n", set_chr_current);
+	pr_debug("eta6937 charging_set_current  set_chr_current=%d\n", set_chr_current);
 
 		register_value = charging_parameter_to_value(eta6937_CS_VTH, array_size, set_chr_current);
-	printk("eta6937 charging_set_current  register_value=%d\n", register_value);
+	pr_debug("eta6937 charging_set_current  register_value=%d\n", register_value);
 		eta6937_set_iocharge(register_value);
 	}
 	return status;
@@ -947,7 +947,7 @@ static int eta6937_set_input_current(struct charger_device *chg_dev, u32 current
 	u32 array_size;
 	u32 register_value;
 
-	printk("liml_bat eta6937_set_input_current=%d\n",current_value);
+	pr_debug("liml_bat eta6937_set_input_current=%d\n",current_value);
 	mutex_lock(&g_input_current_mutex);
 	current_value /= 10;
 	if (current_value > 80000) {
@@ -974,7 +974,7 @@ static int eta6937_set_cv_voltage(struct charger_device *chg_dev, u32 cv)
 	array_size = ARRAY_SIZE(eta6937_VBAT_CV_VTH);
 	set_cv_voltage = bmt_find_closest_level(eta6937_VBAT_CV_VTH, array_size, cv);
 	register_value = charging_parameter_to_value(eta6937_VBAT_CV_VTH, ARRAY_SIZE(eta6937_VBAT_CV_VTH), set_cv_voltage);
-	printk("eta6937 eta6937_set_cv_voltage  register_value=%d,set_cv_voltage=%d\n", register_value,set_cv_voltage);
+	pr_debug("eta6937 eta6937_set_cv_voltage  register_value=%d,set_cv_voltage=%d\n", register_value,set_cv_voltage);
 	eta6937_set_oreg(register_value);
 
 	return status;
@@ -1000,7 +1000,7 @@ static int eta6937_enable_otg(struct charger_device *chg_dev, bool en)
 		set_gpio_otg_en(1);
 		#endif
 		eta6937_set_opa_mode(1);
-		printk("eta6937_enable_otg enable\n");
+		pr_debug("eta6937_enable_otg enable\n");
 	}
 	else
 	{
@@ -1008,7 +1008,7 @@ static int eta6937_enable_otg(struct charger_device *chg_dev, bool en)
 		set_gpio_otg_en(0);
 		#endif
 		eta6937_set_opa_mode(0);
-		printk("eta6937_enable_otg unable\n");
+		pr_debug("eta6937_enable_otg unable\n");
 	}
 
 #ifdef ETA6937_TIMER_DEBUG
@@ -1035,7 +1035,7 @@ int eta6937_enable_otg_ex( bool en)
 		set_gpio_otg_en(1);
 		#endif
 		eta6937_set_opa_mode(1);
-		printk("eta6937_enable_otg enable\n");
+		pr_debug("eta6937_enable_otg enable\n");
 	}
 	else
 	{
@@ -1043,7 +1043,7 @@ int eta6937_enable_otg_ex( bool en)
 		set_gpio_otg_en(0);
 		#endif
 		eta6937_set_opa_mode(0);
-		printk("eta6937_enable_otg unable\n");
+		pr_debug("eta6937_enable_otg unable\n");
 	}
 
 #ifdef ETA6937_TIMER_DEBUG
@@ -1062,7 +1062,7 @@ static int eta6937_do_event(struct charger_device *chg_dev, u32 event, u32 args)
 	if (chg_dev == NULL)
 		return -EINVAL;
 
-	printk("eta6937 %s: event = %d\n", __func__, event);
+	pr_debug("eta6937 %s: event = %d\n", __func__, event);
 	switch (event) {
 	case EVENT_EOC:
 		charger_dev_notify(chg_dev, CHARGER_DEV_NOTIFY_EOC);
@@ -1089,7 +1089,7 @@ static int eta6937_do_event(struct charger_device *chg_dev, u32 event, u32 args)
 	ret = eta6937_read_interface((unsigned char) (eta6937_CON0),
 				(&val), (unsigned char) (CON0_STAT_MASK),(unsigned char) (CON0_STAT_SHIFT));
 				
-	printk("eta6937 %s: val = %d\n", __func__, val);
+	pr_debug("eta6937 %s: val = %d\n", __func__, val);
 	switch (val)
 	 {
 	case 2:
@@ -1110,13 +1110,13 @@ static int eta6937_dump_register(struct charger_device *chg_dev)
 {
 	int i = 0;
 
-	printk("eta6937 [eta6937] ");
+	pr_debug("eta6937 [eta6937] ");
 	for (i = 0; i <= eta6937_REG_NUM; i++) {
 		eta6937_read_byte(i, &eta6937_reg[i]);
-		printk("eta6937 [0x%x]=0x%x ", i, eta6937_reg[i]);
+		pr_debug("eta6937 [0x%x]=0x%x ", i, eta6937_reg[i]);
 	}
 	eta6937_set_tmr_rst(1);
-	printk("eta6937 \n");
+	pr_debug("eta6937 \n");
 
 	return 0;
 }
@@ -1127,10 +1127,10 @@ static int eta6937_parse_dt(struct eta6937_info *info, struct device *dev)
 	struct device_node *np = dev->of_node;
 	int ret = -1;
 	
-	printk("eta6937 %s\n", __func__);
+	pr_debug("eta6937 %s\n", __func__);
 
 	if (!np) {
-		printk("eta6937 %s: no of node\n", __func__);
+		pr_debug("eta6937 %s: no of node\n", __func__);
 		return -ENODEV;
 	}
 
@@ -1142,7 +1142,7 @@ static int eta6937_parse_dt(struct eta6937_info *info, struct device *dev)
 	info->pinctrl = devm_pinctrl_get(dev);
 	if (IS_ERR(info->pinctrl)) {
 		ret = PTR_ERR(info->pinctrl);
-		printk("eta6937 mycat Cannot find eta6937 info->pinctrl! ret=%d\n", ret);
+		pr_debug("eta6937 mycat Cannot find eta6937 info->pinctrl! ret=%d\n", ret);
 		goto parse_err;
 	}
 
@@ -1150,7 +1150,7 @@ static int eta6937_parse_dt(struct eta6937_info *info, struct device *dev)
 	if (IS_ERR(info->psc_chg_en_high))
 	{
 		ret = PTR_ERR(info->psc_chg_en_high);
-		printk("eta6937 mycat info->psc_chg_en_high ret = %d\n",ret);
+		pr_debug("eta6937 mycat info->psc_chg_en_high ret = %d\n",ret);
 		goto parse_err;
 	}
 
@@ -1158,7 +1158,7 @@ static int eta6937_parse_dt(struct eta6937_info *info, struct device *dev)
 	if (IS_ERR(info->psc_chg_en_low))
 	{
 		ret = PTR_ERR(info->psc_chg_en_low);
-		printk("eta6937 mycat info->psc_chg_en_low ret = %d\n",ret);
+		pr_debug("eta6937 mycat info->psc_chg_en_low ret = %d\n",ret);
 		goto parse_err;
 	}
 
@@ -1167,7 +1167,7 @@ static int eta6937_parse_dt(struct eta6937_info *info, struct device *dev)
 	return 0;
 	
 	parse_err:
-		printk("eta6937 parse dts failed!\n");
+		pr_debug("eta6937 parse dts failed!\n");
 
 	return ret;
 }
@@ -1195,7 +1195,7 @@ static int eta6937_driver_probe(struct i2c_client *client, const struct i2c_devi
 	int ret = 0;
 	struct eta6937_info *info = NULL;
 
-	printk("eta6937 [eta6937_driver_probe] enter\n");
+	pr_debug("eta6937 [eta6937_driver_probe] enter\n");
 
 	info = devm_kzalloc(&client->dev, sizeof(struct eta6937_info), GFP_KERNEL);
 	if (!info)
@@ -1216,7 +1216,7 @@ static int eta6937_driver_probe(struct i2c_client *client, const struct i2c_devi
 	info->chg_dev = charger_device_register(info->chg_dev_name,
 		&client->dev, info, &eta6937_chg_ops, &eta6937_chg_props);
 	if (IS_ERR_OR_NULL(info->chg_dev)) {
-		printk("eta6937 %s: register charger device failed\n", __func__);
+		pr_debug("eta6937 %s: register charger device failed\n", __func__);
 		ret = PTR_ERR(info->chg_dev);
 		return ret;
 	}
@@ -1224,7 +1224,7 @@ static int eta6937_driver_probe(struct i2c_client *client, const struct i2c_devi
 	/* --------------------- */
 	eta6937_hw_component_detect();
 	eta6937_changer_vender_code = eta6937_get_vender_code();
-	printk("eta6937 get vendor id: (0x%x)\n", eta6937_changer_vender_code);
+	pr_debug("eta6937 get vendor id: (0x%x)\n", eta6937_changer_vender_code);
 	/* eta6937_hw_init(); //move to charging_hw_xxx.c */
 
 #if 1
@@ -1244,7 +1244,7 @@ static int eta6937_driver_probe(struct i2c_client *client, const struct i2c_devi
 
 	info->psy = power_supply_get_by_name("charger");
 	if (!info->psy) {
-		printk("eta6937 %s: get power supply failed\n", __func__);
+		pr_debug("eta6937 %s: get power supply failed\n", __func__);
 		return -EINVAL;
 	}
 
@@ -1256,7 +1256,7 @@ static int eta6937_driver_probe(struct i2c_client *client, const struct i2c_devi
 #endif
 
 	eta6937_chargin_hw_init_done = 1;
-	printk("eta6937 [eta6937_driver_probe] successful\n");
+	pr_debug("eta6937 [eta6937_driver_probe] successful\n");
 
 	return 0;
 }
@@ -1269,7 +1269,7 @@ static int eta6937_driver_probe(struct i2c_client *client, const struct i2c_devi
 unsigned char g_reg_value_eta6937;
 static ssize_t show_eta6937_access(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	printk("eta6937 [show_eta6937_access] 0x%x\n", g_reg_value_eta6937);
+	pr_debug("eta6937 [show_eta6937_access] 0x%x\n", g_reg_value_eta6937);
 	return sprintf(buf, "%u\n", g_reg_value_eta6937);
 }
 
@@ -1281,7 +1281,7 @@ static ssize_t store_eta6937_access(struct device *dev, struct device_attribute 
 	unsigned int reg_value = 0;
 	unsigned int reg_address = 0;
 
-	printk("eta6937 [store_eta6937_access]\n");
+	pr_debug("eta6937 [store_eta6937_access]\n");
 
 	if (buf != NULL && size != 0) {
 
@@ -1318,7 +1318,7 @@ static int eta6937_user_space_probe(struct platform_device *dev)
 {
 	int ret_device_file = 0;
 
-	printk("eta6937 ******** eta6937_user_space_probe!! ********\n");
+	pr_debug("eta6937 ******** eta6937_user_space_probe!! ********\n");
 
 	ret_device_file = device_create_file(&(dev->dev), &dev_attr_eta6937_access);
 
@@ -1365,9 +1365,9 @@ static int __init eta6937_init(void)
 
 	/* i2c registeration using DTS instead of boardinfo*/
 #ifdef CONFIG_OF
-	printk("eta6937 [eta6937_init] init start with i2c DTS");
+	pr_debug("eta6937 [eta6937_init] init start with i2c DTS");
 #else
-	printk("eta6937 [eta6937_init] init start. ch=%d\n", eta6937_BUSNUM);
+	pr_debug("eta6937 [eta6937_init] init start. ch=%d\n", eta6937_BUSNUM);
 	i2c_register_board_info(eta6937_BUSNUM, &i2c_eta6937, 1);
 #endif
 	if (i2c_add_driver(&eta6937_driver) != 0) {
@@ -1381,13 +1381,13 @@ static int __init eta6937_init(void)
 	/* eta6937 user space access interface */
 	ret = platform_device_register(&eta6937_user_space_device);
 	if (ret) {
-		printk("eta6937 ****[eta6937_init] Unable to device register(%d)\n",
+		pr_debug("eta6937 ****[eta6937_init] Unable to device register(%d)\n",
 			    ret);
 		return ret;
 	}
 	ret = platform_driver_register(&eta6937_user_space_driver);
 	if (ret) {
-		printk("eta6937 ****[eta6937_init] Unable to register driver (%d)\n",
+		pr_debug("eta6937 ****[eta6937_init] Unable to register driver (%d)\n",
 			    ret);
 		return ret;
 	}
@@ -1397,7 +1397,7 @@ static int __init eta6937_init(void)
 
 static void __exit eta6937_exit(void)
 {
-	printk("[eta6937_exit] enter\n");
+	pr_debug("[eta6937_exit] enter\n");
 
 	i2c_del_driver(&eta6937_driver);
 }
