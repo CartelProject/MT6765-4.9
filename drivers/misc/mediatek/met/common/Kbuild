@@ -1,11 +1,11 @@
-$(info ======== Build met.ko ... ========)
+# $(info ======== Build met.ko ... ========)
 MET_CORE := common
 obj-m := met.o
 
 ifneq ($(wildcard $(MET_PLF_DIR)/feature_config/Kbuild),)
     include $(MET_PLF_DIR)/feature_config/Kbuild
 else
-    $(info ======= Missing $(MET_PLF_DIR)/feature_config/Kbuild ========)
+    # $(info ======= Missing $(MET_PLF_DIR)/feature_config/Kbuild ========)
 endif
 
 ccflags-y += -DCONFIG_MET_MODULE
@@ -40,12 +40,12 @@ met-y := $(MET_CORE)/met_main.o \
 CFLAGS_interface.o += -DMET_USER_EVENT_SUPPORT
 CFLAGS_met_tag_ex.o += -DMET_USER_EVENT_SUPPORT
 
-$(info CPUPMU_VERSION = $(CPUPMU_VERSION))
+# $(info CPUPMU_VERSION = $(CPUPMU_VERSION))
 ifeq ("$(CPUPMU_VERSION)", "V8_2")
     ccflags-y += -DCPUPMU_V8_2
 endif
 
-$(info ARCH = $(ARCH))
+# $(info ARCH = $(ARCH))
 ifeq ($(ARCH), mips)
     met-y += $(MET_CORE)/mips_pmu_hw.o
 endif #ifeq ($(ARCH), mips)
@@ -62,7 +62,7 @@ ifeq ($(ARCH), arm64)
     met-y += $(MET_CORE)/v8_pmu_hw.o
 endif
 
-$(info CONFIG_CPU_FREQ = $(CONFIG_CPU_FREQ))
+# $(info CONFIG_CPU_FREQ = $(CONFIG_CPU_FREQ))
 ifeq ($(CONFIG_CPU_FREQ),y)
     met-y += $(MET_CORE)/power.o
 endif
@@ -72,7 +72,7 @@ endif
 # MET_EMI
 ################################################################################
 FEATURE_SSPM_EMI := $(if $(FEATURE_SSPM_EMI),$(FEATURE_SSPM_EMI),y)
-$(info FEATURE_SSPM_EMI = $(FEATURE_SSPM_EMI))
+# $(info FEATURE_SSPM_EMI = $(FEATURE_SSPM_EMI))
 
 MET_EMI := $(if $(filter n,$(FEATURE_SSPM_EMI)),n,y)
 
@@ -88,7 +88,7 @@ endif
 # MET_GPU
 ################################################################################
 FEATURE_GPU := $(if $(FEATURE_GPU),$(FEATURE_GPU),y)
-$(info FEATURE_GPU = $(FEATURE_GPU))
+# $(info FEATURE_GPU = $(FEATURE_GPU))
 
 ifneq ($(FEATURE_GPU), n)
     MET_GPU := y
@@ -98,8 +98,8 @@ ifneq ($(FEATURE_GPU), n)
         ccflags-y += -I$(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM)/
     else
         MET_GPU = n
-        $(info ======= Missing $(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM)/mtk_gpufreq.h ========)
-        $(info ======== disable MET_GPU ========)
+        # $(info ======= Missing $(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM)/mtk_gpufreq.h ========)
+        # $(info ======== disable MET_GPU ========)
     endif
 
     # for mtk_gpu_utility.h
@@ -107,14 +107,14 @@ ifneq ($(FEATURE_GPU), n)
         ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/
     else
         MET_GPU = n
-        $(info ======== Missing $(srctree)/drivers/misc/mediatek/include/mt-plat/mtk_gpu_utility.h ========)
-        $(info ======== disable MET_GPU ========)
+        # $(info ======== Missing $(srctree)/drivers/misc/mediatek/include/mt-plat/mtk_gpu_utility.h ========)
+        # $(info ======== disable MET_GPU ========)
     endif
 
     ifneq ($(CONFIG_MTK_GPU_SUPPORT), y)
         MET_GPU = n
-        $(info ======== CONFIG_MTK_GPU_SUPPORT = n ========)
-        $(info ======== disable MET_GPU ========)
+        # $(info ======== CONFIG_MTK_GPU_SUPPORT = n ========)
+        # $(info ======== disable MET_GPU ========)
     endif
 else
     MET_GPU := n
@@ -127,7 +127,7 @@ met-$(MET_GPU) += $(MET_CORE)/mtk_gpu_metmonitor.o
 # MET_VCOREDVFS
 ################################################################################
 FEATURE_VCOREDVFS := $(if $(FEATURE_VCOREDVFS),$(FEATURE_VCOREDVFS),y)
-$(info FEATURE_VCOREDVFS = $(FEATURE_VCOREDVFS))
+# $(info FEATURE_VCOREDVFS = $(FEATURE_VCOREDVFS))
 
 ifneq ($(FEATURE_VCOREDVFS), n)
     MET_VCOREDVFS := y
@@ -137,8 +137,8 @@ ifneq ($(FEATURE_VCOREDVFS), n)
         ccflags-y += -I$(MET_VCOREDVFS_INC)/
     else
         MET_VCOREDVFS = n
-        $(info ======== Missing $(MET_VCOREDVFS_INC)/mtk_vcorefs_manager.h ========)
-        $(info ======== disable MET_VCOREDVFS ========)
+        # $(info ======== Missing $(MET_VCOREDVFS_INC)/mtk_vcorefs_manager.h ========)
+        # $(info ======== disable MET_VCOREDVFS ========)
     endif
 
     # for mtk_vcorefs_governor.h
@@ -146,8 +146,8 @@ ifneq ($(FEATURE_VCOREDVFS), n)
         ccflags-y += -I$(MET_VCOREDVFS_INC)
     else
         MET_VCOREDVFS = n
-        $(info ======== Missing $(MET_VCOREDVFS_INC)/mtk_vcorefs_governor.h ========)
-        $(info ======== disable MET_VCOREDVFS ========)
+        # $(info ======== Missing $(MET_VCOREDVFS_INC)/mtk_vcorefs_governor.h ========)
+        # $(info ======== disable MET_VCOREDVFS ========)
     endif
 
     # for helio-dvfsrc.h
@@ -155,8 +155,8 @@ ifneq ($(FEATURE_VCOREDVFS), n)
         ccflags-y += -I$(srctree)/drivers/devfreq/
     else
         MET_VCOREDVFS = n
-        $(info ======== Missing $(srctree)/drivers/devfreq/helio-dvfsrc.h ========)
-        $(info ======== disable MET_VCOREDVFS ========)
+        # $(info ======== Missing $(srctree)/drivers/devfreq/helio-dvfsrc.h ========)
+        # $(info ======== disable MET_VCOREDVFS ========)
     endif
 else
     MET_VCOREDVFS := n
@@ -169,7 +169,7 @@ met-$(MET_VCOREDVFS) += $(MET_CORE)/met_vcoredvfs.o
 # MET_PTPOD
 ################################################################################
 FEATURE_PTPOD := $(if $(FEATURE_PTPOD),$(FEATURE_PTPOD),y)
-$(info FEATURE_PTPOD = $(FEATURE_PTPOD))
+# $(info FEATURE_PTPOD = $(FEATURE_PTPOD))
 
 ifneq ($(FEATURE_PTPOD), n)
     MET_PTPOD := y
@@ -179,8 +179,8 @@ ifneq ($(FEATURE_PTPOD), n)
         ccflags-y += -I$(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM)/
     else
         MET_PTPOD = n
-        $(info ======== Missing $(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM)/mtk_gpufreq.h ========)
-        $(info ======== disable MET_PTPOD ========)
+        # $(info ======== Missing $(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM)/mtk_gpufreq.h ========)
+        # $(info ======== disable MET_PTPOD ========)
     endif
 
     # for mtk_cpufreq_api.h
@@ -188,8 +188,8 @@ ifneq ($(FEATURE_PTPOD), n)
         ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include/
     else
         MET_PTPOD = n
-        $(info ======== Missing $(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include/mach/mtk_cpufreq_api.h ========)
-        $(info ======== disable MET_PTPOD ========)
+        # $(info ======== Missing $(srctree)/drivers/misc/mediatek/include/mt-plat/$(MTK_PLATFORM)/include/mach/mtk_cpufreq_api.h ========)
+        # $(info ======== disable MET_PTPOD ========)
     endif
 
     # for mtk_cpufreq_config.h
@@ -197,8 +197,8 @@ ifneq ($(FEATURE_PTPOD), n)
         ccflags-y += -I$(MET_PTPOD_INC)
     else
         MET_PTPOD = n
-        $(info ======== Missing $(MET_PTPOD_INC)/mtk_cpufreq_config.h ========)
-        $(info ======== disable MET_PTPOD ========)
+        # $(info ======== Missing $(MET_PTPOD_INC)/mtk_cpufreq_config.h ========)
+        # $(info ======== disable MET_PTPOD ========)
     endif
 else
     MET_PTPOD := n
@@ -211,7 +211,7 @@ met-$(MET_PTPOD) += $(MET_CORE)/met_ptpod.o
 # MET_CPUDSU
 ################################################################################
 FEATURE_CPUDSU := $(if $(FEATURE_CPUDSU),$(FEATURE_CPUDSU),y)
-$(info FEATURE_CPUDSU = $(FEATURE_CPUDSU))
+# $(info FEATURE_CPUDSU = $(FEATURE_CPUDSU))
 
 MET_CPUDSU := $(if $(filter n,$(FEATURE_CPUDSU)),n,y)
 
@@ -222,7 +222,7 @@ met-$(MET_CPUDSU) += $(MET_CORE)/cpu_dsu.o \
 # MET_WALLTIME
 ################################################################################
 FEATURE_WALLTIME := $(if $(FEATURE_WALLTIME),$(FEATURE_WALLTIME),y)
-$(info FEATURE_WALLTIME = $(FEATURE_WALLTIME))
+# $(info FEATURE_WALLTIME = $(FEATURE_WALLTIME))
 
 MET_WALLTIME := $(if $(filter n,$(FEATURE_WALLTIME)),n,y)
 
@@ -233,7 +233,7 @@ met-$(MET_WALLTIME) += $(MET_CORE)/met_wall_time.o
 # EVENT_POWER (default setting is disable)
 ################################################################################
 FEATURE_EVENT_POWER := $(if $(FEATURE_EVENT_POWER),$(FEATURE_EVENT_POWER),n)
-$(info FEATURE_EVENT_POWER = $(FEATURE_EVENT_POWER))
+# $(info FEATURE_EVENT_POWER = $(FEATURE_EVENT_POWER))
 
 ifeq ($(FEATURE_EVENT_POWER), y)
 	ccflags-y += -DMET_EVENT_POWER_SUPPORT
@@ -249,16 +249,16 @@ else
     FEATURE_ONDIEMET_WALLTIME := n
 endif
 
-$(info FEATURE_ONDIEMET = $(FEATURE_ONDIEMET))
-$(info FEATURE_ONDIEMET_WALLTIME = $(FEATURE_ONDIEMET_WALLTIME))
+# $(info FEATURE_ONDIEMET = $(FEATURE_ONDIEMET))
+# $(info FEATURE_ONDIEMET_WALLTIME = $(FEATURE_ONDIEMET_WALLTIME))
 
 ifneq ($(FEATURE_ONDIEMET), n)
     subdir-ccflags-y += -DONDIEMET_SUPPORT
 
     ifeq ($(CONFIG_MTK_TINYSYS_SSPM_SUPPORT),)
-        $(info CONFIG_MTK_TINYSYS_SSPM_SUPPORT = n)
+        # $(info CONFIG_MTK_TINYSYS_SSPM_SUPPORT = n)
     else
-        $(info CONFIG_MTK_TINYSYS_SSPM_SUPPORT = $(CONFIG_MTK_TINYSYS_SSPM_SUPPORT))
+        # $(info CONFIG_MTK_TINYSYS_SSPM_SUPPORT = $(CONFIG_MTK_TINYSYS_SSPM_SUPPORT))
     endif
 
     ifeq ($(CONFIG_MTK_TINYSYS_SSPM_SUPPORT),y)
@@ -275,14 +275,14 @@ ifneq ($(FEATURE_ONDIEMET), n)
 
             SYS_SSPM_READY := y
         else
-            $(info ======== Missing $(srctree)/drivers/misc/mediatek/sspm/$(MTK_PLATFORM)/sspm_ipi_define.h========)
-            $(info ======== disable ALL ondiemet feature ========)
+            # $(info ======== Missing $(srctree)/drivers/misc/mediatek/sspm/$(MTK_PLATFORM)/sspm_ipi_define.h========)
+            # $(info ======== disable ALL ondiemet feature ========)
 
             SYS_SSPM_READY := n
         endif
     else
-        $(info ======== CONFIG_MTK_TINYSYS_SSPM_SUPPORT = n ========)
-        $(info ======== disable ALL ondiemet feature ========)
+        # $(info ======== CONFIG_MTK_TINYSYS_SSPM_SUPPORT = n ========)
+        # $(info ======== disable ALL ondiemet feature ========)
 
         SYS_SSPM_READY := n
     endif
@@ -300,7 +300,7 @@ endif
 ifneq ($(wildcard $(MET_PLF_DIR)/Kbuild),)
     include $(MET_PLF_DIR)/Kbuild
 else
-    $(info ======= Missing $(MET_PLF_DIR)/Kbuild ========)
+    # $(info ======= Missing $(MET_PLF_DIR)/Kbuild ========)
 endif
 
 #################################################################################
